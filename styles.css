@@ -1,0 +1,469 @@
+/* --- Thème Carnet de Croquis Interactif --- */
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Patrick+Hand&family=Architects+Daughter&family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+  /* Palette "Croquis" */
+  --papier-bg: #fdfdfa; /* Papier très légèrement texturé */
+  --encre-texte: #3d3a3a;
+  --encre-secondaire: #6e6a6a;
+  --bordure-crayon: #c5c1c1;
+  --reliure-couleur: #a1887f; /* Brun cuir/carton */
+  --ombre-couleur: rgba(60, 40, 30, 0.2);
+  --highlight-couleur: rgba(255, 235, 59, 0.4); /* Surligneur jaune transparent */
+  --underline-couleur: #677BC4; /* Couleur primaire pour souligner */
+  --box-couleur: #e57373; /* Danger pour boîtes? */
+  --danger-couleur: #e57373;
+
+  /* Typographie */
+  --font-corps: 'Roboto', sans-serif;
+  --font-titre-page: 'Kalam', cursive;
+  --font-titre-carte: 'Patrick Hand', cursive;
+  --font-label: 'Patrick Hand', cursive;
+  --font-bouton: 'Architects Daughter', cursive;
+
+  /* Effets */
+  --ombre-livre: 5px 5px 15px var(--ombre-couleur);
+  --ombre-interne: inset 2px 2px 5px rgba(0,0,0,0.05);
+  --transition-page: 0.5s ease-in-out; /* Transition pour page fade/slide */
+}
+
+/* --- Structure Générale --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Empêche le scroll global */
+  font-family: var(--font-corps);
+  color: var(--encre-texte);
+  background-color: #e0ddd7; /* Fond bureau/table */
+  /* Texture optionnelle pour le fond global */
+  /* background-image: url('img/desk-texture.jpg'); */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Conteneur du Carnet */
+#sketchbook-container {
+  width: 90vw;
+  height: 85vh; /* Un peu moins haut pour voir la table */
+  max-width: 1200px; /* Limite largeur max */
+  max-height: 800px;
+  position: relative; /* Contexte pour les onglets et le livre */
+  perspective: 1500px; /* Pour effet 3D si on l'active plus tard */
+  filter: drop-shadow(var(--ombre-livre)); /* Ombre globale */
+}
+
+/* Le Carnet lui-même */
+#sketchbook {
+  width: 100%;
+  height: 100%;
+  background-color: var(--reliure-couleur); /* Couleur reliure visible sur les bords */
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden; /* Cache les pages non actives */
+  box-shadow: var(--ombre-interne), 0 0 0 5px var(--reliure-couleur); /* Effet reliure */
+}
+
+/* --- Style des Pages --- */
+.page {
+  position: absolute;
+  top: 5px; /* Simule épaisseur couverture */
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  background-color: var(--papier-bg);
+  background-image: url('img/paper-texture.png'); /* Texture papier */
+  padding: 2rem 2.5rem;
+  border-radius: 3px;
+  overflow-y: auto; /* Scroll SI contenu dépasse */
+  /* Styles pour la transition (Fondu/Slide simple) */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(30px); /* Sort par la droite */
+  transition: opacity var(--transition-page), visibility var(--transition-page), transform var(--transition-page);
+  z-index: 1; /* Par défaut derrière */
+}
+.page.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  z-index: 10; /* Page active au premier plan */
+}
+/* Pourrait être amélioré avec transition par la gauche pour page précédente */
+/* .page.transition-out-left { transform: translateX(-30px); } */
+
+/* Titre de Page */
+.page-title {
+  font-family: var(--font-titre-page);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--encre-texte);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  /* Effet souligné "dessiné" (appliqué via JS/RoughNotation) */
+  /* border-bottom: 2px solid var(--underline-couleur); */
+  display: inline-block; /* Important pour Rough Notation underline/box */
+}
+
+/* Grille de contenu sur la page */
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Moins de colonnes? */
+  gap: 1.5rem; /* Espace entre croquis */
+}
+
+/* Conteneur pour contenu non-grid (Formulaires, etc.) */
+.static-content-area {
+    padding: 1rem;
+    background-color: rgba(240, 240, 240, 0.4); /* Léger fond distinctif */
+    border-radius: 4px;
+    border: 1px dashed var(--bordure-crayon);
+    margin-top: 1rem;
+}
+
+/* --- Style des Cartes (Croquis/Notes) --- */
+.grid-item {
+  background: transparent; /* Transparent pour voir le papier page */
+  border: 1px dashed var(--bordure-crayon); /* Bordure crayonné */
+  border-radius: 3px;
+  padding: 1rem;
+  min-height: 150px; /* Hauteur minimum */
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  position: relative; /* Contexte pour les actions */
+}
+.grid-item:hover {
+    transform: scale(1.02);
+    border-color: var(--encre-secondaire);
+}
+
+/* Style pour la carte "Ajouter" */
+.add-item {
+    border-style: solid;
+    border-width: 2px;
+    background-color: rgba(200, 220, 200, 0.1); /* Vert très pâle transparent */
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+}
+.add-item:hover {
+    border-color: var(--underline-couleur);
+    background-color: rgba(103, 123, 196, 0.1);
+}
+.add-button {
+    background: none;
+    border: none;
+    font-family: var(--font-titre-page);
+    font-size: 1.1rem;
+    color: var(--encre-secondaire);
+    padding: 1rem;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.add-button i {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+.add-item:hover .add-button {
+    color: var(--underline-couleur);
+}
+
+
+/* Contenu DANS les cartes */
+.grid-item h3 {
+    font-family: var(--font-titre-carte);
+    font-size: 1.3rem;
+    color: var(--encre-texte);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+.grid-item p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    flex-grow: 1;
+}
+.grid-item img {
+    max-width: 100%;
+    border-radius: 2px;
+    margin-bottom: 0.8rem;
+    border: 1px solid var(--bordure-crayon); /* Trait fin autour image */
+}
+/* Style image Polaroid (optionnel, peut être supprimé si pas utilisé) */
+.polaroid-style { border-color: var(--encre-texte); background-color: white; padding: 1rem 1rem 3rem 1rem;}
+.polaroid-style img { margin: 0 auto 0.5rem; display: block; max-width: calc(100% - 10px); border-width: 5px; border-color:white;}
+.polaroid-style h3 { text-align: center;}
+.polaroid-style p {display:none;}
+
+/* Actions DANS les cartes */
+.card-actions, .news-actions, .member-actions, .partner-actions, .calendar-actions, .coffee-actions {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--bordure-crayon);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    align-items: center;
+}
+.btn-action { /* Style Boutons Crayon/Gomme */
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0.3rem;
+    font-size: 1rem;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+.btn-action i { margin: 0; }
+.btn-action.edit:hover { color: var(--underline-couleur); transform: rotate(-10deg) scale(1.2); }
+.btn-action.delete:hover { color: var(--danger-couleur); transform: rotate(10deg) scale(1.2); }
+
+/* --- Navigation / Onglets --- */
+.sketchbook-tabs {
+  position: absolute;
+  top: 20px; /* Positionné en haut du carnet */
+  right: -50px; /* Sort légèrement sur la droite */
+  display: flex;
+  flex-direction: column; /* Onglets verticaux */
+  gap: 5px;
+  z-index: 20; /* Au dessus des pages */
+}
+.tab {
+  background-color: var(--reliure-couleur);
+  color: var(--papier-bg);
+  padding: 8px 10px;
+  border-radius: 5px 0 0 5px; /* Arrondi côté carnet */
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, padding-right 0.2s ease;
+  box-shadow: -2px 2px 5px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  width: 35px; /* Largeur initiale juste pour icône */
+  overflow: hidden;
+  white-space: nowrap;
+}
+.tab:hover {
+  background-color: lighten(var(--reliure-couleur), 10%);
+  transform: translateX(-5px); /* Sort un peu plus */
+  width: auto; /* Révèle le texte */
+  padding-right: 15px;
+}
+.tab.active {
+  background-color: var(--underline-couleur); /* Couleur active */
+  z-index: 21;
+   width: auto; /* Garder texte visible */
+  padding-right: 15px;
+  transform: translateX(-5px);
+}
+.tab i {
+  font-size: 1.2rem;
+  min-width: 20px; /* Espace pour l'icône */
+  text-align: center;
+}
+.tab .tooltip { /* Texte de l'onglet */
+  display: inline-block; /* Pour être caché/révélé */
+  margin-left: 8px;
+  font-family: var(--font-corps);
+  font-size: 0.8rem;
+  font-weight: 500;
+   background: none; padding: 0; color: inherit; position: static; line-height: 1.2;
+}
+
+
+/* --- MODALS (Par dessus tout) --- */
+.modal {
+  background-color: rgba(50, 40, 30, 0.7);
+  backdrop-filter: blur(3px);
+  display: none; /* Assure qu'ils sont cachés par défaut */
+  z-index: 1050;
+}
+.modal-content { /* Style "Papier à lettre" */
+  background-color: var(--papier-bg);
+  background-image: url('img/paper-texture.png');
+  border: 1px solid var(--bordure-crayon);
+  box-shadow: 0px 8px 25px rgba(50, 40, 30, 0.3);
+  border-radius: 4px;
+  margin: 5% auto;
+  padding: 2rem 2.5rem 2.5rem;
+  max-width: 600px;
+  position: relative;
+}
+/* Pas de trombone, style plus simple */
+.modal-content::before { display: none; }
+
+.modal-content h2 { /* Titre dans modal */
+    font-family: var(--font-titre-page);
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px dashed var(--bordure-crayon);
+    padding-bottom: 0.5rem;
+}
+/* Formulaires DANS les modals */
+.modal .form-group label {
+    font-family: var(--font-label);
+    font-size: 1rem;
+    color: var(--encre-secondaire);
+    margin-bottom: 0.4rem;
+}
+.modal .form-group input, .modal .form-group textarea, .modal .form-group select {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--bordure-crayon);
+    border-radius: 0;
+    padding: 0.5rem 0.1rem;
+    font-family: var(--font-corps);
+    font-size: 1rem;
+    color: var(--encre-texte);
+    transition: border-color 0.2s ease;
+    box-shadow: none;
+}
+.modal .form-group input:focus, .modal .form-group textarea:focus, .modal .form-group select:focus {
+    outline: none;
+    border-bottom: 2px solid var(--underline-couleur);
+}
+.modal .form-group textarea { min-height: 80px; resize: vertical; }
+
+/* Boutons DANS modals */
+.modal .btn {
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 30px; /* Boutons pilules */
+  cursor: pointer;
+  font-family: var(--font-bouton);
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all var(--transition-rapide);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block; /* Centré par défaut */
+  width: fit-content;
+  margin: 1.5rem auto 0;
+}
+.modal .btn-primary { background-color: var(--underline-couleur); color: white; }
+.modal .btn-primary:hover { background-color: darken(var(--underline-couleur), 10%); transform: translateY(-1px);}
+.modal .btn-secondary { background-color: var(--encre-secondaire); color: white; }
+.modal .btn-secondary:hover { background-color: var(--encre-texte); transform: translateY(-1px); }
+
+/* Bouton Fermer Modal */
+.close { /* Style bouton dessiné 'X' */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.close::before, .close::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    width: 80%;
+    height: 2px; /* Epaisseur du trait */
+    background-color: var(--encre-secondaire);
+    transition: background-color 0.2s ease;
+}
+.close::before { transform: translateY(-50%) rotate(45deg); }
+.close::after { transform: translateY(-50%) rotate(-45deg); }
+.close:hover::before, .close:hover::after { background-color: var(--danger-couleur); }
+
+/* --- Section Spécifique : Badges Café --- */
+#section-badges .filter-zone { /* Moins intrusif */
+    display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; padding: 1rem; border: 1px dashed var(--bordure-crayon); border-radius: 3px; background: rgba(0,0,0,0.02);
+}
+#section-badges .form-group { margin-bottom: 0; flex-grow: 1;}
+#section-badges .form-group label { font-size: 0.9rem; margin-bottom: 0.2rem; }
+#section-badges #search-employee-btn { flex-shrink: 0; }
+
+#employee-info, #message { /* Style des zones de résultats */
+     background: rgba(255,255,255, 0.6); border: 1px solid var(--bordure-crayon); padding: 1rem; margin-top: 1rem; border-radius: 3px; box-shadow: var(--ombre-interne);
+}
+#employee-info h3, #employee-info h4 { font-family: var(--font-titre-carte); color: var(--encre-texte);}
+
+
+/* --- Section Spécifique : Synthèse --- */
+.synthese-grid { /* Grid pour les petites cartes synthèse */
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 2rem;
+}
+.synth-card { /* Style petite note/étiquette */
+    background-color: var(--papier-bg);
+    border: 1px solid var(--bordure-crayon);
+    box-shadow: 1px 1px 3px var(--ombre-couleur);
+    border-radius: 2px;
+    padding: 0.8rem;
+    text-align: center;
+}
+.synth-card h3 { font-family: var(--font-titre-carte); font-size: 0.8rem; margin-bottom: 0.3rem; color: var(--encre-secondaire); font-weight: normal;}
+.synth-card h3 small { font-size: 0.7rem;}
+.synth-card p { font-family: var(--font-corps); font-size: 1.8rem; font-weight: bold; color: var(--encre-texte); margin: 0;}
+
+#synth-chart-container { /* Conteneur du graph */
+    border: 1px dashed var(--bordure-crayon); border-radius: 3px; padding: 1rem; background: rgba(255,255,255,0.4);
+    max-width: 350px; /* Plus petit graph */
+    margin: 0 auto; /* Centré */
+}
+
+
+/* --- Rough Notation Styles --- */
+.rough-underline > svg > path { stroke: var(--underline-couleur); stroke-width: 1.5; }
+.rough-highlight > svg > path { stroke: var(--highlight-couleur); stroke-width: 8; }
+.rough-box > svg > path { stroke: var(--box-couleur); stroke-width: 1.5; }
+.rough-circle > svg > path { stroke: var(--underline-couleur); stroke-width: 1.5; }
+
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    #sketchbook-container { width: 95vw; height: 90vh; }
+    .page { padding: 1.5rem; }
+    .page-title { font-size: 2rem; }
+    .page-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .sketchbook-tabs { right: -45px; } /* Rapprocher un peu */
+    .tab { width: 30px; padding: 6px 8px; }
+    .tab i { font-size: 1.1rem; }
+}
+
+@media (max-width: 600px) {
+    body { align-items: flex-start; padding-top: 1rem; /* Permettre un peu de scroll si carnet trop grand */ overflow: auto;}
+     #sketchbook-container { height: auto; min-height: 80vh; width: 95vw; filter: none; } /* Enlève drop shadow */
+     #sketchbook { box-shadow: var(--ombre-interne); } /* Juste interne */
+    .page { padding: 1rem 1.2rem; }
+    .page-title { font-size: 1.6rem; margin-bottom: 1rem; }
+    .page-grid { grid-template-columns: 1fr; } /* Une colonne */
+
+     /* Menu onglets en bas ? */
+    .sketchbook-tabs {
+        top: auto; bottom: 10px;
+        right: auto; left: 50%;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(5px);
+        padding: 5px; border-radius: 30px; box-shadow: var(--ombre-moyenne);
+     }
+    .tab {
+        flex-direction: column; width: auto; height: 45px; padding: 5px;
+        border-radius: 50%; box-shadow: var(--ombre-legere);
+         background-color: var(--papier-bg); color: var(--encre-secondaire);
+    }
+    .tab i { font-size: 1rem; min-width: auto;}
+    .tab .tooltip { display: none; } /* Cacher texte */
+    .tab:hover, .tab.active { transform: scale(1.1); width: auto; }
+     .tab.active { background-color: var(--underline-couleur); color: white; }
+
+
+    .modal-content { width: 90%; margin: 5% auto; padding: 1rem 1.5rem 1.5rem;}
+    .close { top: 8px; right: 8px; width: 25px; height: 25px;}
+    .synthese-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.8rem;}
+     #synth-chart-container { max-width: 90%; }
+}

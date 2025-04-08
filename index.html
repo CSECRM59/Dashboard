@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carnet CSE</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Patrick+Hand&family=Architects+Daughter&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- FontAwesome pour les icônes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- (Tabulator CSS - optionnel) -->
+  <link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Le carnet lui-même -->
+  <div id="sketchbook-container">
+    <div id="sketchbook">
+        <!-- Les Pages du Carnet (les sections) -->
+        <section class="page content" id="section-actus" data-section="actus">
+          <h2 class="page-title">Actualités</h2>
+          <div id="news-list" class="page-grid">
+            <div class="grid-item add-item">
+              <button id="open-add-actualite" class="add-button">
+                <i class="fas fa-plus"></i> Nouvelle Actu
+              </button>
+            </div>
+            <!-- News items injectés ici -->
+          </div>
+        </section>
+
+        <section class="page content" id="section-membres" data-section="membres">
+            <h2 class="page-title">L'Équipe</h2>
+            <div id="members-list" class="page-grid">
+                <div class="grid-item add-item">
+                    <button id="open-add-membre" class="add-button">
+                       <i class="fas fa-plus"></i> Nouveau Membre
+                    </button>
+                </div>
+                <!-- Members items injectés ici -->
+            </div>
+        </section>
+
+        <section class="page content" id="section-partenaires" data-section="partenaires">
+            <h2 class="page-title">Partenaires</h2>
+            <div id="partners-list" class="page-grid">
+                <div class="grid-item add-item">
+                     <button id="open-add-partenaire" class="add-button">
+                       <i class="fas fa-plus"></i> Nouveau Partenaire
+                    </button>
+                </div>
+                <!-- Partners items injectés ici -->
+            </div>
+        </section>
+
+        <section class="page content" id="section-demandes" data-section="demandes">
+            <h2 class="page-title">Demandes Contact</h2>
+            <div id="demandes-list" class="page-grid">
+                 <!-- Demandes injectées ici -->
+            </div>
+        </section>
+
+        <section class="page content" id="section-calendrier" data-section="calendrier">
+            <h2 class="page-title">Calendrier</h2>
+            <div id="calendar-list" class="page-grid">
+                <div class="grid-item add-item">
+                    <button id="open-add-calendrier" class="add-button">
+                       <i class="fas fa-plus"></i> Nouvel Événement
+                    </button>
+                </div>
+                 <!-- Calendar items injectés ici -->
+            </div>
+        </section>
+
+        <section class="page content" id="section-badges" data-section="badges">
+            <h2 class="page-title">Badges Café</h2>
+            <div class="static-content-area"> <!-- Zone pour contenu non-grid -->
+                <div class="filter-zone">
+                    <div class="form-group"> <label for="filter-nom">Nom :</label> <input type="text" id="filter-nom" placeholder="Nom..."></div>
+                    <div class="form-group"> <label for="filter-prenom">Prénom :</label> <input type="text" id="filter-prenom" placeholder="Prénom..."></div>
+                    <button id="search-employee-btn" class="btn btn-secondary">Chercher</button>
+                </div>
+                <div id="employee-info" style="display: none;">
+                     <h3>Fiche Salarié</h3><p id="employee-details"></p><h4>Ajouter une clé</h4>
+                     <form id="form-add-key">
+                        <div class="form-group"><label for="key-number">N° Clé:</label><input type="text" id="key-number" required></div>
+                        <div class="form-group"><label for="key-type">Type:</label><select id="key-type"><option value="E">E</option><option value="R">R</option></select></div>
+                        <div class="form-group"><label for="key-amount">Montant:</label><input type="number" id="key-amount"></div>
+                        <button type="submit" class="btn btn-primary">Ajouter Clé</button>
+                    </form>
+                </div>
+                <div id="message"></div>
+             </div>
+        </section>
+
+        <section class="page content" id="section-coffee" data-section="coffee">
+            <h2 class="page-title">Pannes Café</h2>
+            <div id="coffee-list" class="page-grid">
+                <!-- Coffee reports injectés ici -->
+            </div>
+        </section>
+
+        <section class="page content" id="section-synthese" data-section="synthese">
+            <h2 class="page-title">Synthèse</h2>
+             <div class="static-content-area"> <!-- Zone pour contenu non-grid -->
+                <div id="synthese-container" class="synthese-grid"> <!-- Grid spécifique pour synthèse -->
+                    <!-- Synth cards injectées ici -->
+                </div>
+                <div id="synth-chart-container">
+                    <canvas id="synth-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="page content" id="section-params" data-section="params">
+             <h2 class="page-title">Paramètres</h2>
+             <div class="static-content-area">
+                <p>Section des paramètres en cours de croquis...</p>
+             </div>
+        </section>
+
+    </div><!-- Fin #sketchbook -->
+    <!-- Navigation / Onglets du carnet -->
+    <nav class="menu sketchbook-tabs">
+        <div class="menu-item tab" data-section="actus"> <i class="fas fa-newspaper"></i> <span class="tooltip">Actus</span></div>
+        <div class="menu-item tab" data-section="membres"> <i class="fas fa-users"></i> <span class="tooltip">Équipe</span></div>
+        <div class="menu-item tab" data-section="partenaires"> <i class="fas fa-handshake"></i> <span class="tooltip">Partenaires</span></div>
+        <div class="menu-item tab" data-section="demandes"> <i class="fas fa-address-book"></i> <span class="tooltip">Demandes</span></div>
+        <div class="menu-item tab" data-section="calendrier"> <i class="fas fa-calendar-alt"></i> <span class="tooltip">Calendrier</span></div>
+        <div class="menu-item tab" data-section="badges"> <i class="fas fa-id-badge"></i> <span class="tooltip">Badges</span></div>
+        <div class="menu-item tab" data-section="coffee"> <i class="fas fa-mug-hot"></i> <span class="tooltip">Café</span></div> <!-- Icône changée -->
+        <div class="menu-item tab" data-section="synthese"> <i class="fas fa-chart-pie"></i> <span class="tooltip">Synthèse</span></div>
+        <div class="menu-item tab" data-section="params"> <i class="fas fa-cog"></i> <span class="tooltip">Prefs</span></div>
+    </nav>
+  </div> <!-- Fin #sketchbook-container -->
+
+
+  <!-- MODALS (restent par dessus tout) -->
+  <!-- ... (copier/coller tous les divs .modal d'avant ici, leur contenu HTML est inchangé) ... -->
+  <!-- Modal Actualités -->
+  <div id="modal-actualites" class="modal"> <div class="modal-content"><span class="close" data-modal="modal-actualites">×</span><h2>Nouvelle Actualité</h2><form id="form-actualites"><div class="form-group"><label for="news-title">Titre</label><input type="text" id="news-title" required></div><div class="form-group"><label for="news-content">Contenu</label><textarea id="news-content" rows="4" required></textarea></div><div class="form-group"><label for="news-date">Date</label><input type="date" id="news-date" required></div><div class="form-group"><label for="news-image">URL Image</label><input type="url" id="news-image" placeholder="http://..."></div><div class="form-group"><label for="news-status">Statut</label><select id="news-status"><option value="Publié">Publié</option><option value="Brouillon">Brouillon</option></select></div><button type="submit" class="btn btn-primary">Noter</button></form></div></div>
+  <div id="modal-edit-actualite" class="modal"> <div class="modal-content"><span class="close" data-modal="modal-edit-actualite">×</span><h2>Modifier l'Actualité</h2><form id="form-edit-actualite"><input type="hidden" id="edit-news-id"><div class="form-group"><label for="edit-news-title">Titre</label><input type="text" id="edit-news-title" required></div><div class="form-group"><label for="edit-news-content">Contenu</label><textarea id="edit-news-content" rows="4" required></textarea></div><div class="form-group"><label for="edit-news-date">Date</label><input type="date" id="edit-news-date" required></div><div class="form-group"><label for="edit-news-image">URL Image</label><input type="url" id="edit-news-image" placeholder="http://..."></div><div class="form-group"><label for="edit-news-status">Statut</label><select id="edit-news-status"><option value="Publié">Publié</option><option value="Brouillon">Brouillon</option></select></div><button type="submit" class="btn btn-primary">Mettre à jour</button></form></div></div>
+  <!-- Modal Membres --><div id="modal-membres" class="modal"><div class="modal-content"><span class="close" data-modal="modal-membres">×</span><h2>Ajouter un Membre</h2><form id="form-membres"><div class="form-group"><label for="member-nom">Nom</label><input type="text" id="member-nom" required></div><div class="form-group"><label for="member-prenom">Prénom</label><input type="text" id="member-prenom" required></div><div class="form-group"><label for="member-mail">Mail</label><input type="email" id="member-mail" placeholder="nom@exemple.com" required></div><div class="form-group"><label for="member-operation">Opération</label><input type="text" id="member-operation" required></div><div class="form-group"><label for="member-role">Rôle</label><input type="text" id="member-role" required></div><div class="form-group"><label for="member-photo">Photo URL</label><input type="url" id="member-photo" placeholder="http://..."></div><button type="submit" class="btn btn-primary">Ajouter</button></form></div></div><div id="modal-edit-membre" class="modal"><div class="modal-content"><span class="close" data-modal="modal-edit-membre">×</span><h2>Modifier le Membre</h2><form id="form-edit-membre"><input type="hidden" id="edit-member-id"><div class="form-group"><label for="edit-member-nom">Nom</label><input type="text" id="edit-member-nom" required></div><div class="form-group"><label for="edit-member-prenom">Prénom</label><input type="text" id="edit-member-prenom" required></div><div class="form-group"><label for="edit-member-mail">Mail</label><input type="email" id="edit-member-mail" required></div><div class="form-group"><label for="edit-member-operation">Opération</label><input type="text" id="edit-member-operation" required></div><div class="form-group"><label for="edit-member-role">Rôle</label><input type="text" id="edit-member-role" required></div><div class="form-group"><label for="edit-member-photo">Photo URL</label><input type="url" id="edit-member-photo" placeholder="http://..."></div><button type="submit" class="btn btn-primary">Mettre à jour</button></form></div></div>
+  <!-- Modal Partenaires --><div id="modal-partenaires" class="modal"><div class="modal-content"><span class="close" data-modal="modal-partenaires">×</span><h2>Ajouter un Partenaire</h2><form id="form-partenaires"><div class="form-group"><label for="partenaire-categorie">Catégorie</label><input type="text" id="partenaire-categorie" required></div><div class="form-group"><label for="partenaire-nom">Nom</label><input type="text" id="partenaire-nom" required></div><div class="form-group"><label for="partenaire-description">Description</label><textarea id="partenaire-description" rows="4" required></textarea></div><div class="form-group"><label for="partenaire-lien">Lien</label><input type="url" id="partenaire-lien" placeholder="http://..." required></div><div class="form-group"><label for="partenaire-logo">Logo URL</label><input type="url" id="partenaire-logo" placeholder="http://..."></div><button type="submit" class="btn btn-primary">Enregistrer</button></form></div></div><div id="modal-edit-partenaire" class="modal"><div class="modal-content"><span class="close" data-modal="modal-edit-partenaire">×</span><h2>Modifier le Partenaire</h2><form id="form-edit-partenaire"><input type="hidden" id="edit-partenaire-id"><div class="form-group"><label for="edit-partenaire-categorie">Catégorie</label><input type="text" id="edit-partenaire-categorie" required></div><div class="form-group"><label for="edit-partenaire-nom">Nom</label><input type="text" id="edit-partenaire-nom" required></div><div class="form-group"><label for="edit-partenaire-description">Description</label><textarea id="edit-partenaire-description" rows="4" required></textarea></div><div class="form-group"><label for="edit-partenaire-lien">Lien</label><input type="url" id="edit-partenaire-lien" placeholder="http://..." required></div><div class="form-group"><label for="edit-partenaire-logo">Logo URL</label><input type="url" id="edit-partenaire-logo" placeholder="http://..."></div><button type="submit" class="btn btn-primary">Mettre à jour</button></form></div></div>
+  <!-- Modal Calendrier --><div id="modal-calendrier" class="modal"><div class="modal-content"><span class="close" data-modal="modal-calendrier">×</span><h2>Nouvel Événement</h2><form id="form-calendrier"><div class="form-group"><label for="event-title">Titre</label><input type="text" id="event-title" required></div><div class="form-group"><label for="event-description">Description</label><textarea id="event-description" rows="4" required></textarea></div><div class="form-group"><label for="event-date">Date début</label><input type="date" id="event-date" required></div><div class="form-group"><label for="event-time">Heure début</label><input type="time" id="event-time" required></div><div class="form-group"><label for="event-end-date">Date fin</label><input type="date" id="event-end-date" required></div><div class="form-group"><label for="event-end-time">Heure fin</label><input type="time" id="event-end-time" required></div><button type="submit" class="btn btn-primary">Ajouter</button></form></div></div><div id="modal-edit-calendrier" class="modal"><div class="modal-content"><span class="close" data-modal="modal-edit-calendrier">×</span><h2>Modifier l'Événement</h2><form id="form-edit-calendrier"><input type="hidden" id="edit-event-id"><div class="form-group"><label for="edit-event-title">Titre</label><input type="text" id="edit-event-title" required></div><div class="form-group"><label for="edit-event-description">Description</label><textarea id="edit-event-description" rows="4" required></textarea></div><div class="form-group"><label for="edit-event-date">Date début</label><input type="date" id="edit-event-date" required></div><div class="form-group"><label for="edit-event-time">Heure début</label><input type="time" id="edit-event-time" required></div><div class="form-group"><label for="edit-event-end-date">Date fin</label><input type="date" id="edit-event-end-date" required></div><div class="form-group"><label for="edit-event-end-time">Heure fin</label><input type="time" id="edit-event-end-time" required></div><button type="submit" class="btn btn-primary">Mettre à jour</button></form></div></div>
+  <!-- Fin Modals -->
+
+
+  <!-- Rough Notation Library (Importée via HTML) -->
+  <!-- L'initialisation se fera dans script.js -->
+
+  <!-- (Tabulator JS - optionnel) -->
+  <script src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js"></script>
+
+  <!-- Script principal -->
+  <script src="script.js" type="module"></script> <!-- type="module" requis -->
+
+</body>
+</html>
