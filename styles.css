@@ -1,469 +1,704 @@
-/* --- Thème Carnet de Croquis Interactif --- */
+/* --- Thème Atelier d'Artiste / Moodboard Dynamique --- */
+
+/* --- Google Font Import --- */
 @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Patrick+Hand&family=Architects+Daughter&family=Roboto:wght@400;500;700&display=swap');
 
+/* --- VARIABLES CSS & STYLES GÉNÉRAUX --- */
 :root {
-  /* Palette "Croquis" */
-  --papier-bg: #fdfdfa; /* Papier très légèrement texturé */
-  --encre-texte: #3d3a3a;
-  --encre-secondaire: #6e6a6a;
-  --bordure-crayon: #c5c1c1;
-  --reliure-couleur: #a1887f; /* Brun cuir/carton */
-  --ombre-couleur: rgba(60, 40, 30, 0.2);
-  --highlight-couleur: rgba(255, 235, 59, 0.4); /* Surligneur jaune transparent */
-  --underline-couleur: #677BC4; /* Couleur primaire pour souligner */
-  --box-couleur: #e57373; /* Danger pour boîtes? */
-  --danger-couleur: #e57373;
+  /* Palette "Atelier" */
+  --papier-bg: #f8f5f0; /* Blanc cassé / Kraft très clair */
+  --encre-texte: #4a4a4a; /* Gris foncé, pas noir pur */
+  --encre-secondaire: #7a7a7a; /* Gris moyen */
+  --bordure-crayon: #dcdcdc;
+  --postit-jaune: #fffacd;
+  --postit-bleu: #d3f1ff;
+  --postit-rose: #ffe4e1;
+  --masking-tape-jaune: #ffe8a0;
+  --masking-tape-vert: #cff0cc;
+  --accent-couleur-1: #677BC4; /* Bleu-violet doux pour liens/boutons */
+  --accent-couleur-2: #ffb347; /* Orange doux */
+  --danger-couleur: #e57373; /* Rouge doux */
 
   /* Typographie */
   --font-corps: 'Roboto', sans-serif;
-  --font-titre-page: 'Kalam', cursive;
-  --font-titre-carte: 'Patrick Hand', cursive;
-  --font-label: 'Patrick Hand', cursive;
+  --font-titre-principal: 'Kalam', cursive;
+  --font-titre-secondaire: 'Patrick Hand', cursive;
   --font-bouton: 'Architects Daughter', cursive;
 
   /* Effets */
-  --ombre-livre: 5px 5px 15px var(--ombre-couleur);
-  --ombre-interne: inset 2px 2px 5px rgba(0,0,0,0.05);
-  --transition-page: 0.5s ease-in-out; /* Transition pour page fade/slide */
+  --ombre-legere: 2px 2px 5px rgba(0, 0, 0, 0.08);
+  --ombre-moyenne: 3px 3px 8px rgba(0, 0, 0, 0.12);
+  --ombre-forte: 5px 5px 15px rgba(0, 0, 0, 0.15);
+  --transition-rapide: 0.2s ease-out;
+  --transition-normale: 0.3s ease;
 }
 
-/* --- Structure Générale --- */
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden; /* Empêche le scroll global */
   font-family: var(--font-corps);
+  background-color: var(--papier-bg);
+  /* Optionnel: Texture papier subtile */
+  background-image: url('img/paper.png'); */
   color: var(--encre-texte);
-  background-color: #e0ddd7; /* Fond bureau/table */
-  /* Texture optionnelle pour le fond global */
-  /* background-image: url('img/desk-texture.jpg'); */
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 400; /* Moins gras pour les polices manuscrites */
+}
+
+h1 {
+  font-family: var(--font-titre-principal);
+  font-size: 2.8rem;
+  color: var(--accent-couleur-1);
+  font-weight: 700; /* Le titre principal peut être plus marqué */
+}
+
+h2 {
+ font-family: var(--font-titre-principal);
+ font-size: 2rem;
+ color: var(--encre-texte);
+ border-bottom: 1px dashed var(--bordure-crayon);
+ padding-bottom: 0.5rem;
+ margin-bottom: 2rem;
+ font-weight: 400;
+}
+
+h3 { /* Titres dans les cartes */
+    font-family: var(--font-titre-secondaire);
+    font-size: 1.3rem;
+    color: var(--accent-couleur-1);
+    margin-bottom: 0.5rem;
+}
+
+p {
+  margin-bottom: 0.75rem;
+  color: var(--encre-secondaire);
+  font-size: 0.95rem;
+}
+p strong {
+    color: var(--encre-texte);
+    font-weight: 500;
+}
+
+a {
+  color: var(--accent-couleur-1);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--accent-couleur-1);
+  transition: color var(--transition-rapide), border-bottom var(--transition-rapide);
+}
+
+a:hover {
+  color: var(--accent-couleur-2);
+  border-bottom: 1px dotted var(--accent-couleur-2);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 3px;
+  border: 1px solid var(--bordure-crayon);
+  padding: 4px;
+  background-color: #fff;
+  box-shadow: var(--ombre-legere);
+}
+
+/* --- HEADER --- */
+header {
+  background: transparent;
+  box-shadow: none;
+  padding: 2rem 1rem;
+  text-align: center;
+  border-bottom: 2px solid var(--bordure-crayon); /* Trait plus épais ici */
+  margin-bottom: 2.5rem;
+}
+
+header h1 {
+  margin: 0;
+}
+
+/* --- MENU DE NAVIGATION (POST-ITS) --- */
+.menu {
   display: flex;
   justify-content: center;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  padding: 0 1rem;
 }
 
-/* Conteneur du Carnet */
-#sketchbook-container {
-  width: 90vw;
-  height: 85vh; /* Un peu moins haut pour voir la table */
-  max-width: 1200px; /* Limite largeur max */
-  max-height: 800px;
-  position: relative; /* Contexte pour les onglets et le livre */
-  perspective: 1500px; /* Pour effet 3D si on l'active plus tard */
-  filter: drop-shadow(var(--ombre-livre)); /* Ombre globale */
-}
-
-/* Le Carnet lui-même */
-#sketchbook {
-  width: 100%;
-  height: 100%;
-  background-color: var(--reliure-couleur); /* Couleur reliure visible sur les bords */
-  border-radius: 5px;
-  position: relative;
-  overflow: hidden; /* Cache les pages non actives */
-  box-shadow: var(--ombre-interne), 0 0 0 5px var(--reliure-couleur); /* Effet reliure */
-}
-
-/* --- Style des Pages --- */
-.page {
-  position: absolute;
-  top: 5px; /* Simule épaisseur couverture */
-  left: 5px;
-  right: 5px;
-  bottom: 5px;
-  background-color: var(--papier-bg);
-  background-image: url('img/paper-texture.png'); /* Texture papier */
-  padding: 2rem 2.5rem;
+.menu-item {
+  background-color: var(--postit-jaune);
   border-radius: 3px;
-  overflow-y: auto; /* Scroll SI contenu dépasse */
-  /* Styles pour la transition (Fondu/Slide simple) */
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(30px); /* Sort par la droite */
-  transition: opacity var(--transition-page), visibility var(--transition-page), transform var(--transition-page);
-  z-index: 1; /* Par défaut derrière */
-}
-.page.active {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
-  z-index: 10; /* Page active au premier plan */
-}
-/* Pourrait être amélioré avec transition par la gauche pour page précédente */
-/* .page.transition-out-left { transform: translateX(-30px); } */
-
-/* Titre de Page */
-.page-title {
-  font-family: var(--font-titre-page);
-  font-size: 2.4rem;
-  font-weight: 700;
-  color: var(--encre-texte);
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  /* Effet souligné "dessiné" (appliqué via JS/RoughNotation) */
-  /* border-bottom: 2px solid var(--underline-couleur); */
-  display: inline-block; /* Important pour Rough Notation underline/box */
-}
-
-/* Grille de contenu sur la page */
-.page-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Moins de colonnes? */
-  gap: 1.5rem; /* Espace entre croquis */
-}
-
-/* Conteneur pour contenu non-grid (Formulaires, etc.) */
-.static-content-area {
-    padding: 1rem;
-    background-color: rgba(240, 240, 240, 0.4); /* Léger fond distinctif */
-    border-radius: 4px;
-    border: 1px dashed var(--bordure-crayon);
-    margin-top: 1rem;
-}
-
-/* --- Style des Cartes (Croquis/Notes) --- */
-.grid-item {
-  background: transparent; /* Transparent pour voir le papier page */
-  border: 1px dashed var(--bordure-crayon); /* Bordure crayonné */
-  border-radius: 3px;
-  padding: 1rem;
-  min-height: 150px; /* Hauteur minimum */
+  width: 95px;
+  height: 95px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-  position: relative; /* Contexte pour les actions */
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: var(--ombre-moyenne);
+  transition: transform var(--transition-rapide), box-shadow var(--transition-rapide);
+  cursor: pointer;
+  text-align: center;
+  /* Rotation initiale via JS pour l'aléatoire, sinon :nth-child */
+  /* transform: rotate(-2deg); */
 }
+
+/* Couleurs alternées pour les post-its */
+.menu-item:nth-child(3n+1) { background-color: var(--postit-bleu); }
+.menu-item:nth-child(3n+2) { background-color: var(--postit-rose); }
+
+/* Rotation alternée (si pas de JS)
+.menu-item:nth-child(even) { transform: rotate(3deg); }
+*/
+
+.menu-item:hover {
+  transform: rotate(0deg) scale(1.1);
+  box-shadow: var(--ombre-forte);
+  z-index: 10;
+}
+
+.menu-item i {
+  font-size: 2rem;
+  color: var(--encre-secondaire);
+  margin-bottom: 0.3rem;
+  transition: color var(--transition-rapide);
+}
+
+.menu-item:hover i {
+  color: var(--encre-texte);
+}
+
+/* Tooltip devient le label manuscrit */
+.tooltip {
+  display: block;
+  position: static;
+  background: none;
+  color: var(--encre-secondaire);
+  padding: 0;
+  border-radius: 0;
+  font-family: var(--font-titre-secondaire); /* Police manuscrite */
+  font-size: 0.8rem;
+  margin-top: 0px;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+/* --- SECTIONS DE CONTENU --- */
+.content {
+  display: none;
+  padding: 1rem 1.5rem;
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.content.active {
+  display: block;
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- GRILLE & CARTES (NOTES/PHOTOS) --- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2rem; /* Plus d'espace pour l'effet moodboard */
+}
+
+.grid-item {
+  background: #fff; /* Fond blanc papier */
+  padding: 1.5rem;
+  border-radius: 4px;
+  box-shadow: var(--ombre-legere);
+  border: 1px solid var(--bordure-crayon);
+  position: relative; /* Pour le masking tape */
+  transition: transform var(--transition-normale), box-shadow var(--transition-normale);
+  display: flex;
+  flex-direction: column;
+  /* Rotation initiale via JS pour l'aléatoire, sinon :nth-child */
+  /* transform: rotate(1deg); */
+}
+
+/* Rotation alternée (si pas de JS)
+.grid-item:nth-child(3n) { transform: rotate(-1.5deg); }
+.grid-item:nth-child(4n) { transform: rotate(2deg); }
+*/
+
 .grid-item:hover {
-    transform: scale(1.02);
-    border-color: var(--encre-secondaire);
+  transform: rotate(0deg) scale(1.03);
+  box-shadow: var(--ombre-forte);
+  z-index: 5;
 }
 
-/* Style pour la carte "Ajouter" */
-.add-item {
-    border-style: solid;
-    border-width: 2px;
-    background-color: rgba(200, 220, 200, 0.1); /* Vert très pâle transparent */
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    cursor: pointer;
+/* Effet Masking Tape Optionnel */
+.grid-item::before {
+  content: '';
+  position: absolute;
+  top: -12px; /* Remonte un peu plus */
+  left: 50%;
+  width: 70px; /* Un peu plus large */
+  height: 25px;
+  background-color: var(--masking-tape-jaune);
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  border-left: 1px dashed rgba(0,0,0,0.1);
+  border-right: 1px dashed rgba(0,0,0,0.1);
+  transform: translateX(-50%) rotate(-4deg); /* Rotation plus marquée */
+  opacity: 0.75;
+  z-index: 1; /* Au-dessus de la carte */
+  pointer-events: none; /* N'interfère pas avec la souris */
 }
-.add-item:hover {
-    border-color: var(--underline-couleur);
-    background-color: rgba(103, 123, 196, 0.1);
+/* Variation de couleur du scotch */
+.grid-item:nth-child(2n)::before {
+    background-color: var(--masking-tape-vert);
+    transform: translateX(-50%) rotate(3deg);
 }
-.add-button {
-    background: none;
-    border: none;
-    font-family: var(--font-titre-page);
-    font-size: 1.1rem;
-    color: var(--encre-secondaire);
-    padding: 1rem;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-.add-button i {
-    display: block;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-.add-item:hover .add-button {
-    color: var(--underline-couleur);
+.grid-item.add-item::before {
+    display: none; /* Pas de scotch sur la carte d'ajout */
 }
 
 
-/* Contenu DANS les cartes */
-.grid-item h3 {
-    font-family: var(--font-titre-carte);
-    font-size: 1.3rem;
-    color: var(--encre-texte);
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-}
 .grid-item p {
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin-bottom: 0.5rem;
-    flex-grow: 1;
+  font-size: 0.9rem;
+  flex-grow: 1;
 }
-.grid-item img {
-    max-width: 100%;
-    border-radius: 2px;
-    margin-bottom: 0.8rem;
-    border: 1px solid var(--bordure-crayon); /* Trait fin autour image */
-}
-/* Style image Polaroid (optionnel, peut être supprimé si pas utilisé) */
-.polaroid-style { border-color: var(--encre-texte); background-color: white; padding: 1rem 1rem 3rem 1rem;}
-.polaroid-style img { margin: 0 auto 0.5rem; display: block; max-width: calc(100% - 10px); border-width: 5px; border-color:white;}
-.polaroid-style h3 { text-align: center;}
-.polaroid-style p {display:none;}
 
-/* Actions DANS les cartes */
-.card-actions, .news-actions, .member-actions, .partner-actions, .calendar-actions, .coffee-actions {
-    margin-top: auto;
-    padding-top: 0.5rem;
-    border-top: 1px dashed var(--bordure-crayon);
+/* Actions (boutons edit/delete) */
+.card-actions { /* Renommer ou ajouter cette classe aux divs d'actions */
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dotted var(--bordure-crayon);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  align-items: center;
+}
+/* Cibler directement les divs générées par le JS */
+.news-actions, .member-actions, .partner-actions, .calendar-actions, .coffee-actions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dotted var(--bordure-crayon);
     display: flex;
     justify-content: flex-end;
-    gap: 0.5rem;
+    gap: 0.8rem;
     align-items: center;
 }
-.btn-action { /* Style Boutons Crayon/Gomme */
-    background: none;
-    border: none;
-    color: #aaa;
-    cursor: pointer;
-    padding: 0.3rem;
-    font-size: 1rem;
-    transition: color 0.2s ease, transform 0.2s ease;
-}
-.btn-action i { margin: 0; }
-.btn-action.edit:hover { color: var(--underline-couleur); transform: rotate(-10deg) scale(1.2); }
-.btn-action.delete:hover { color: var(--danger-couleur); transform: rotate(10deg) scale(1.2); }
 
-/* --- Navigation / Onglets --- */
-.sketchbook-tabs {
-  position: absolute;
-  top: 20px; /* Positionné en haut du carnet */
-  right: -50px; /* Sort légèrement sur la droite */
-  display: flex;
-  flex-direction: column; /* Onglets verticaux */
-  gap: 5px;
-  z-index: 20; /* Au dessus des pages */
-}
-.tab {
-  background-color: var(--reliure-couleur);
-  color: var(--papier-bg);
-  padding: 8px 10px;
-  border-radius: 5px 0 0 5px; /* Arrondi côté carnet */
+/* Style des boutons d'action (crayon, gomme, épingle...) */
+.btn-action {
+  background: none;
+  border: none;
+  color: var(--encre-secondaire);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, padding-right 0.2s ease;
-  box-shadow: -2px 2px 5px rgba(0,0,0,0.15);
-  display: flex;
+  padding: 0.3rem;
+  font-size: 1.1rem; /* Icônes légèrement plus grandes */
+  transition: color var(--transition-rapide), transform var(--transition-rapide);
+  line-height: 1;
+}
+.btn-action i { margin: 0; } /* Au cas où */
+
+.btn-action.edit:hover { /* Ajouter la classe .edit aux boutons d'édition */
+  color: var(--accent-couleur-1);
+  transform: scale(1.2);
+}
+.btn-action.delete:hover { /* Ajouter la classe .delete aux boutons de suppression */
+  color: var(--danger-couleur);
+  transform: scale(1.2);
+}
+/* Application aux classes existantes (AJOUTER les classes .edit / .delete dans le JS !) */
+.edit-news, .edit-member, .edit-partner, .edit-calendar {
+  /* Hérite de .btn-action */
+}
+.delete-news, .delete-member, .delete-partner, .delete-calendar, .delete-coffee {
+   /* Hérite de .btn-action */
+}
+
+
+/* Carte spéciale pour ajouter */
+.add-item {
+  border: 2px dashed var(--bordure-crayon);
+  background-color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  justify-content: center;
   align-items: center;
-  width: 35px; /* Largeur initiale juste pour icône */
-  overflow: hidden;
-  white-space: nowrap;
-}
-.tab:hover {
-  background-color: lighten(var(--reliure-couleur), 10%);
-  transform: translateX(-5px); /* Sort un peu plus */
-  width: auto; /* Révèle le texte */
-  padding-right: 15px;
-}
-.tab.active {
-  background-color: var(--underline-couleur); /* Couleur active */
-  z-index: 21;
-   width: auto; /* Garder texte visible */
-  padding-right: 15px;
-  transform: translateX(-5px);
-}
-.tab i {
-  font-size: 1.2rem;
-  min-width: 20px; /* Espace pour l'icône */
-  text-align: center;
-}
-.tab .tooltip { /* Texte de l'onglet */
-  display: inline-block; /* Pour être caché/révélé */
-  margin-left: 8px;
-  font-family: var(--font-corps);
-  font-size: 0.8rem;
-  font-weight: 500;
-   background: none; padding: 0; color: inherit; position: static; line-height: 1.2;
+  transition: background-color var(--transition-rapide), border-color var(--transition-rapide);
+  min-height: 180px;
+  box-shadow: none;
+  transform: rotate(0deg) !important; /* Pas de rotation pour celle-ci */
 }
 
+.add-item:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: var(--accent-couleur-1);
+}
 
-/* --- MODALS (Par dessus tout) --- */
-.modal {
-  background-color: rgba(50, 40, 30, 0.7);
-  backdrop-filter: blur(3px);
-  display: none; /* Assure qu'ils sont cachés par défaut */
-  z-index: 1050;
+.add-item button {
+  background: none;
+  border: none;
+  color: var(--encre-secondaire);
+  font-family: var(--font-titre-secondaire); /* Police manuscrite */
+  font-size: 1.1rem;
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
 }
-.modal-content { /* Style "Papier à lettre" */
-  background-color: var(--papier-bg);
-  background-image: url('img/paper-texture.png');
-  border: 1px solid var(--bordure-crayon);
-  box-shadow: 0px 8px 25px rgba(50, 40, 30, 0.3);
-  border-radius: 4px;
-  margin: 5% auto;
-  padding: 2rem 2.5rem 2.5rem;
-  max-width: 600px;
-  position: relative;
-}
-/* Pas de trombone, style plus simple */
-.modal-content::before { display: none; }
-
-.modal-content h2 { /* Titre dans modal */
-    font-family: var(--font-titre-page);
-    font-size: 1.8rem;
-    text-align: center;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px dashed var(--bordure-crayon);
-    padding-bottom: 0.5rem;
-}
-/* Formulaires DANS les modals */
-.modal .form-group label {
-    font-family: var(--font-label);
-    font-size: 1rem;
+.add-item button::before { /* Icône + stylée */
+    content: "+";
+    font-family: var(--font-titre-principal); /* Ou autre police manuscrite */
+    font-weight: 700;
+    font-size: 2.5rem;
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.3rem;
     color: var(--encre-secondaire);
-    margin-bottom: 0.4rem;
 }
-.modal .form-group input, .modal .form-group textarea, .modal .form-group select {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--bordure-crayon);
-    border-radius: 0;
-    padding: 0.5rem 0.1rem;
-    font-family: var(--font-corps);
-    font-size: 1rem;
-    color: var(--encre-texte);
-    transition: border-color 0.2s ease;
-    box-shadow: none;
-}
-.modal .form-group input:focus, .modal .form-group textarea:focus, .modal .form-group select:focus {
-    outline: none;
-    border-bottom: 2px solid var(--underline-couleur);
-}
-.modal .form-group textarea { min-height: 80px; resize: vertical; }
 
-/* Boutons DANS modals */
-.modal .btn {
+.add-item:hover button,
+.add-item:hover button::before {
+  color: var(--accent-couleur-1);
+}
+
+/* --- BOUTONS PRINCIPAUX (Étiquettes/Tampons) --- */
+.btn {
   padding: 0.6rem 1.5rem;
   border: none;
-  border-radius: 30px; /* Boutons pilules */
+  border-radius: 3px;
   cursor: pointer;
-  font-family: var(--font-bouton);
+  font-family: var(--font-bouton); /* Police spécifique */
   font-size: 1rem;
   font-weight: bold;
   transition: all var(--transition-rapide);
-  box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  box-shadow: var(--ombre-legere);
   text-transform: uppercase;
   letter-spacing: 1px;
-  display: block; /* Centré par défaut */
-  width: fit-content;
-  margin: 1.5rem auto 0;
 }
-.modal .btn-primary { background-color: var(--underline-couleur); color: white; }
-.modal .btn-primary:hover { background-color: darken(var(--underline-couleur), 10%); transform: translateY(-1px);}
-.modal .btn-secondary { background-color: var(--encre-secondaire); color: white; }
-.modal .btn-secondary:hover { background-color: var(--encre-texte); transform: translateY(-1px); }
 
-/* Bouton Fermer Modal */
-.close { /* Style bouton dessiné 'X' */
+.btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: var(--ombre-moyenne);
+}
+
+.btn-primary {
+  background-color: var(--accent-couleur-1);
+  color: #fff;
+}
+.btn-primary:hover {
+  background-color: #5361a1; /* Version un peu plus foncée */
+}
+
+.btn-secondary {
+  background-color: var(--masking-tape-jaune); /* Comme le scotch */
+  color: var(--encre-texte);
+  border: 1px solid darken(var(--masking-tape-jaune), 10%); /* Simule un bord */
+}
+.btn-secondary:hover {
+  background-color: #fadf90; /* Un peu plus foncé */
+  box-shadow: var(--ombre-moyenne);
+}
+
+/* --- MODALS (Feuilles/Carnets) --- */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1050;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto; /* Permettre le scroll DANS le modal si contenu long */
+  background-color: rgba(50, 50, 50, 0.6); /* Fond atelier sombre */
+  backdrop-filter: blur(3px); /* Effet flou derrière */
+  animation: fadeInModalBg 0.3s ease;
+}
+
+.modal-content {
+  background: #fff; /* Papier blanc */
+  margin: 6% auto;
+  padding: 2rem 2.5rem 2.5rem; /* Plus d'espace en bas */
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 90%;
+  max-width: 650px;
+  position: relative;
+  box-shadow: var(--ombre-forte);
+  animation: slideInModal 0.4s ease-out;
+}
+/* Effet Trombone Optionnel */
+.modal-content::before {
+    content: '\f0c6'; /* Icône paperclip de FontAwesome */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: -18px;
+    left: 35px;
+    font-size: 2rem;
+    color: #a0a0a0; /* Gris métal */
+    transform: rotate(-20deg);
+    z-index: 1;
+}
+
+@keyframes fadeInModalBg {
+  from { background-color: rgba(50, 50, 50, 0); backdrop-filter: blur(0px); }
+  to { background-color: rgba(50, 50, 50, 0.6); backdrop-filter: blur(3px); }
+}
+
+@keyframes slideInModal {
+  from { transform: translateY(-30px) rotate(-1deg); opacity: 0; }
+  to { transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+
+.modal-content h2 {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.close {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
+  top: 15px;
+  right: 20px;
+  color: var(--encre-secondaire);
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color var(--transition-rapide), transform var(--transition-rapide);
+  line-height: 1;
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 0;
 }
-.close::before, .close::after {
-    content: '';
+.close:hover {
+  color: var(--danger-couleur);
+  transform: rotate(180deg);
+}
+
+/* --- FORMULAIRES (Style Souligné) --- */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-titre-secondaire); /* Police manuscrite label */
+  color: var(--encre-secondaire);
+  font-size: 1rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="url"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.6rem 0.1rem; /* Moins de padding vertical/horizontal */
+  border: none; /* Pas de bordure */
+  border-bottom: 1px solid var(--bordure-crayon); /* Souligné */
+  border-radius: 0; /* Pas de coins arrondis */
+  font-size: 1rem;
+  font-family: var(--font-corps); /* Police normale pour la saisie */
+  color: var(--encre-texte);
+  background-color: transparent; /* Fond transparent */
+  transition: border-color var(--transition-rapide);
+  box-shadow: none !important; /* Override éventuel */
+  box-sizing: border-box;
+}
+.form-group select {
+    appearance: none; /* Style select personnalisé si besoin */
+    background: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%237a7a7a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat right .5rem center/10px 10px;
+    padding-right: 1.5rem; /* Espace pour la flèche */
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-bottom: 2px solid var(--accent-couleur-1); /* Souligné plus épais au focus */
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.5; /* Pour que le texte ne soit pas collé */
+}
+
+form button[type="submit"] {
+  display: block;
+  width: auto; /* Pas pleine largeur par défaut */
+  margin: 1.5rem auto 0; /* Centré */
+  padding: 0.7rem 2rem;
+}
+
+/* --- SECTION SPÉCIFIQUE : BADGES CAFÉ --- */
+#section-badges .filter-zone {
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 1.5rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    border: 1px dashed var(--bordure-crayon);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+#section-badges .form-group {
+    margin-bottom: 0; /* Annule la marge par défaut */
+    flex-grow: 1;
+}
+#section-badges #search-employee-btn {
+    margin-top: 0; /* Annule la marge */
+    flex-shrink: 0; /* Empêche le bouton de rétrécir */
+}
+
+#employee-info {
+  background: #fff;
+  border: 1px solid var(--bordure-crayon);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  border-radius: 4px;
+  box-shadow: var(--ombre-legere);
+}
+#employee-info h3, #employee-info h4 {
+    font-family: var(--font-titre-secondaire);
+    color: var(--accent-couleur-1);
+}
+#message {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+#message[style*="color: green"] {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-color: #a5d6a7;
+}
+#message[style*="color: red"] {
+    background-color: #ffebee;
+    color: #c62828;
+    border-color: #ef9a9a;
+}
+
+
+/* --- SECTION SPÉCIFIQUE : SYNTHESE (Notes Épinglées) --- */
+#synthese-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.synth-card {
+  background: var(--postit-bleu); /* Ou autre couleur post-it */
+  padding: 1.2rem 1rem;
+  border-radius: 3px;
+  box-shadow: var(--ombre-moyenne);
+  text-align: center;
+  transition: transform var(--transition-rapide), box-shadow var(--transition-rapide);
+  /* transform: rotate(2deg); /* Rotation */
+  position: relative;
+}
+/* Effet épingle (thumbtack) */
+.synth-card::after {
+    content: '\f08d'; /* Icône thumbtack FontAwesome */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
     position: absolute;
-    top: 50%;
-    left: 10%;
-    width: 80%;
-    height: 2px; /* Epaisseur du trait */
-    background-color: var(--encre-secondaire);
-    transition: background-color 0.2s ease;
-}
-.close::before { transform: translateY(-50%) rotate(45deg); }
-.close::after { transform: translateY(-50%) rotate(-45deg); }
-.close:hover::before, .close:hover::after { background-color: var(--danger-couleur); }
-
-/* --- Section Spécifique : Badges Café --- */
-#section-badges .filter-zone { /* Moins intrusif */
-    display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; padding: 1rem; border: 1px dashed var(--bordure-crayon); border-radius: 3px; background: rgba(0,0,0,0.02);
-}
-#section-badges .form-group { margin-bottom: 0; flex-grow: 1;}
-#section-badges .form-group label { font-size: 0.9rem; margin-bottom: 0.2rem; }
-#section-badges #search-employee-btn { flex-shrink: 0; }
-
-#employee-info, #message { /* Style des zones de résultats */
-     background: rgba(255,255,255, 0.6); border: 1px solid var(--bordure-crayon); padding: 1rem; margin-top: 1rem; border-radius: 3px; box-shadow: var(--ombre-interne);
-}
-#employee-info h3, #employee-info h4 { font-family: var(--font-titre-carte); color: var(--encre-texte);}
-
-
-/* --- Section Spécifique : Synthèse --- */
-.synthese-grid { /* Grid pour les petites cartes synthèse */
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 2rem;
-}
-.synth-card { /* Style petite note/étiquette */
-    background-color: var(--papier-bg);
-    border: 1px solid var(--bordure-crayon);
-    box-shadow: 1px 1px 3px var(--ombre-couleur);
-    border-radius: 2px;
-    padding: 0.8rem;
-    text-align: center;
-}
-.synth-card h3 { font-family: var(--font-titre-carte); font-size: 0.8rem; margin-bottom: 0.3rem; color: var(--encre-secondaire); font-weight: normal;}
-.synth-card h3 small { font-size: 0.7rem;}
-.synth-card p { font-family: var(--font-corps); font-size: 1.8rem; font-weight: bold; color: var(--encre-texte); margin: 0;}
-
-#synth-chart-container { /* Conteneur du graph */
-    border: 1px dashed var(--bordure-crayon); border-radius: 3px; padding: 1rem; background: rgba(255,255,255,0.4);
-    max-width: 350px; /* Plus petit graph */
-    margin: 0 auto; /* Centré */
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    color: #888; /* Gris métal */
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
 }
 
+.synth-card:nth-child(2n) { background-color: var(--postit-rose); /* transform: rotate(-3deg); */ }
+.synth-card:nth-child(3n) { background-color: var(--postit-jaune); /* transform: rotate(1deg); */ }
 
-/* --- Rough Notation Styles --- */
-.rough-underline > svg > path { stroke: var(--underline-couleur); stroke-width: 1.5; }
-.rough-highlight > svg > path { stroke: var(--highlight-couleur); stroke-width: 8; }
-.rough-box > svg > path { stroke: var(--box-couleur); stroke-width: 1.5; }
-.rough-circle > svg > path { stroke: var(--underline-couleur); stroke-width: 1.5; }
-
-
-/* --- Responsive --- */
-@media (max-width: 900px) {
-    #sketchbook-container { width: 95vw; height: 90vh; }
-    .page { padding: 1.5rem; }
-    .page-title { font-size: 2rem; }
-    .page-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-    .sketchbook-tabs { right: -45px; } /* Rapprocher un peu */
-    .tab { width: 30px; padding: 6px 8px; }
-    .tab i { font-size: 1.1rem; }
+.synth-card:hover {
+  transform: rotate(0deg) scale(1.05);
+  box-shadow: var(--ombre-forte);
+  z-index: 3;
 }
 
-@media (max-width: 600px) {
-    body { align-items: flex-start; padding-top: 1rem; /* Permettre un peu de scroll si carnet trop grand */ overflow: auto;}
-     #sketchbook-container { height: auto; min-height: 80vh; width: 95vw; filter: none; } /* Enlève drop shadow */
-     #sketchbook { box-shadow: var(--ombre-interne); } /* Juste interne */
-    .page { padding: 1rem 1.2rem; }
-    .page-title { font-size: 1.6rem; margin-bottom: 1rem; }
-    .page-grid { grid-template-columns: 1fr; } /* Une colonne */
+.synth-card h3 {
+  font-family: var(--font-titre-secondaire);
+  color: var(--encre-texte);
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
 
-     /* Menu onglets en bas ? */
-    .sketchbook-tabs {
-        top: auto; bottom: 10px;
-        right: auto; left: 50%;
-        transform: translateX(-50%);
-        flex-direction: row;
-        width: auto;
-        background-color: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(5px);
-        padding: 5px; border-radius: 30px; box-shadow: var(--ombre-moyenne);
-     }
-    .tab {
-        flex-direction: column; width: auto; height: 45px; padding: 5px;
-        border-radius: 50%; box-shadow: var(--ombre-legere);
-         background-color: var(--papier-bg); color: var(--encre-secondaire);
-    }
-    .tab i { font-size: 1rem; min-width: auto;}
-    .tab .tooltip { display: none; } /* Cacher texte */
-    .tab:hover, .tab.active { transform: scale(1.1); width: auto; }
-     .tab.active { background-color: var(--underline-couleur); color: white; }
+.synth-card p {
+  font-family: var(--font-corps); /* Chiffre plus classique */
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--encre-texte);
+  margin: 0;
+}
+
+/* Graphique Synthèse (Sur papier millimétré ?) */
+#synth-chart-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #fff; /* Fond blanc */
+  /* Optionnel: Fond papier millimétré */
+  /* background-image: linear-gradient(rgba(103, 123, 196, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(103, 123, 196, 0.15) 1px, transparent 1px);
+  background-size: 15px 15px; */
+  border-radius: 4px;
+  box-shadow: var(--ombre-moyenne);
+  border: 1px solid var(--bordure-crayon);
+  max-width: 400px; /* Réduit la taille */
+  margin-left: auto;
+  margin-right: auto;
+  position: relative; /* Pour Chart.js */
+}
 
 
-    .modal-content { width: 90%; margin: 5% auto; padding: 1rem 1.5rem 1.5rem;}
-    .close { top: 8px; right: 8px; width: 25px; height: 25px;}
-    .synthese-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.8rem;}
-     #synth-chart-container { max-width: 90%; }
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 768px) {
+  h1 { font-size: 2.2rem; }
+  h2 { font-size: 1.6rem; margin-bottom: 1.5rem; }
+  .menu { gap: 1rem; margin-bottom: 2rem; }
+  .menu-item { width: 80px; height: 80px; }
+  .menu-item i { font-size: 1.8rem; }
+  .tooltip { font-size: 0.7rem; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; }
+  .modal-content { margin: 10% auto; padding: 1.5rem 2rem 2rem; max-width: 90%; }
+  .modal-content::before { left: 20px; top: -15px; font-size: 1.8rem;} /* Ajuste trombone */
+  .btn { padding: 0.5rem 1.2rem; font-size: 0.9rem;}
+  #section-badges .filter-zone { flex-direction: column; align-items: stretch;}
+  #section-badges .filter-zone .form-group { width: 100%;}
+  #section-badges #search-employee-btn { width: 100%;}
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.4rem; }
+  .menu { gap: 0.8rem; justify-content: space-around; }
+  .menu-item { width: 70px; height: 70px; }
+  .menu-item i { font-size: 1.6rem; }
+  .grid { grid-template-columns: 1fr; gap: 1rem; } /* Une seule colonne */
+  .grid-item, .add-item { transform: rotate(0) !important; } /* Annule rotation sur mobile */
+  .grid-item::before { display: none; } /* Cache le scotch sur mobile */
+  .content { padding: 0.5rem 1rem; }
+  .modal-content { margin: 5% auto; width: 95%; padding: 1rem 1.5rem 1.5rem; }
+   .modal-content::before { display: none;} /* Cache trombone sur mobile */
+   .close { font-size: 1.8rem; top: 10px; right: 15px;}
+  .synth-card { transform: rotate(0) !important; } /* Annule rotation */
+   .synth-card::after { display: none;} /* Cache épingle */
+  #synth-chart-container { max-width: 95%; }
 }
