@@ -251,10 +251,19 @@ function updateMembersList() {
     } else {
         container.querySelector('.empty-message')?.remove();
         membersData.forEach(member => {
-            const item = document.createElement('div'); const photoURL=member.PhotoURL;
-          if (photoURL) { 
-            item.classList.add('grid-item', photoURL ? 'polaroid-style' : '');}
-             item.innerHTML = `
+          const item = document.createElement('div'); 
+          const photoURL=member.PhotoURL;
+          
+          // ===> CORRECTION ICI <===
+            // 1. Ajouter TOUJOURS la classe de base
+            item.classList.add('grid-item');
+
+            // 2. Ajouter la classe 'polaroid-style' SEULEMENT si photoURL existe
+            if (photoURL) {
+                item.classList.add('polaroid-style');
+            }
+          
+          item.innerHTML = `
                ${photoURL ? `<img src="${photoURL}" alt="Photo ${member.Prenom}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div style="display:none; height:100px; background:#f0f0f0; margin:0.5rem; border:1px dashed #ccc; align-items:center; justify-content:center;"><i class="fas fa-user" style="font-size:2rem; color:#ccc;"></i></div>`
                : '<div style="height:100px; background:#f0f0f0; margin:0.5rem; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center;"><i class="fas fa-user" style="font-size:2rem; color:#ccc;"></i></div>'}
                <h3>${member.Prenom||''} ${member.Nom||''}</h3>
