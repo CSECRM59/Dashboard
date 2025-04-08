@@ -252,7 +252,8 @@ function updateMembersList() {
         container.querySelector('.empty-message')?.remove();
         membersData.forEach(member => {
             const item = document.createElement('div'); const photoURL=member.PhotoURL;
-            item.classList.add('grid-item', photoURL ? 'polaroid-style' : '');
+          if (photoURL) { 
+            item.classList.add('grid-item', photoURL ? 'polaroid-style' : '');}
              item.innerHTML = `
                ${photoURL ? `<img src="${photoURL}" alt="Photo ${member.Prenom}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div style="display:none; height:100px; background:#f0f0f0; margin:0.5rem; border:1px dashed #ccc; align-items:center; justify-content:center;"><i class="fas fa-user" style="font-size:2rem; color:#ccc;"></i></div>`
                : '<div style="height:100px; background:#f0f0f0; margin:0.5rem; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center;"><i class="fas fa-user" style="font-size:2rem; color:#ccc;"></i></div>'}
