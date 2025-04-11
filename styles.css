@@ -109,10 +109,10 @@ img {
 header {
   background: transparent;
   box-shadow: none;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   border-bottom: 2px solid var(--bordure-crayon); /* Trait plus épais ici */
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.0rem;
 }
 
 header h1 {
