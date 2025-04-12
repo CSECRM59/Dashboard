@@ -2140,6 +2140,24 @@ document.addEventListener('DOMContentLoaded', () => {
     setupBadgeEventListeners(); // Appel essentiel pour la nouvelle logique
 
 
+    // ====> AJOUT : ENREGISTREMENT DU SERVICE WORKER <====
+    if ('serviceWorker' in navigator) {
+      console.log("Navigateur compatible Service Worker.");
+      // Utiliser l'événement 'load' pour ne pas bloquer le rendu initial
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js') // Chemin vers ton sw.js
+          .then(registration => {
+            console.log('Service Worker enregistré avec succès ! Scope:', registration.scope);
+          })
+          .catch(error => {
+            console.error('Échec de l\'enregistrement du Service Worker:', error);
+          });
+      });
+    } else {
+        console.log("Navigateur non compatible Service Worker.");
+    }
+    // ====> FIN AJOUT <====
+    
     // --- Activer la section par défaut au chargement ---
     // Doit être appelé APRÈS que les listeners soient attachés et que les
     // fonctions de chargement initiales soient lancées (même si les données
