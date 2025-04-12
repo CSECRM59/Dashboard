@@ -1961,7 +1961,7 @@ function loadSyntheseData() {
             { title: 'Contacts <small>(act.)</small>', countKey: 'contacts', color: postitPeche, borderColor: borderPeche },
             { title: 'Pannes Café <small>(act.)</small>', countKey: 'coffee', color: postitPrune, borderColor: borderPrune },
             { title: 'Badges Dist.', countKey: 'totalBadges', color: postitOrange, borderColor: borderOrange },
-            { title: 'Total Cautions', countKey: 'cautionAmount', unit: '€', color: postitGris, borderColor: borderGris }
+            { title: 'Total Cautions', countKey: 'cautionAmount', unit: '€', color: postitGris, borderColor: borderGris },
             { title: 'Vues App', countKey: 'views', color: postitViolet, borderColor: borderViolet },
         { title: 'Installs PWA', countKey: 'installs', color: postitTurquoise, borderColor: borderTurquoise }
         ];
