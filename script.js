@@ -1812,7 +1812,7 @@ function loadSyntheseData() {
         db.collection('membres').get(),        // Index 1: Membres
         db.collection('partenaires').get(),    // Index 2: Partenaires
         db.collection('contact').where('status', '==', 'en cours').get(), // Index 3: Contacts Actifs
-        db.collection('salaries_test').get()   // Index 4: Salariés
+        db.collection('salaries_test').get(),   // Index 4: Salariés
         db.collection('analytics').doc('globalCounts').get() // Index 5: Analytics
     ]).then((snapshots) => {
         console.log("Synthèse: Toutes les données Firebase récupérées.");
