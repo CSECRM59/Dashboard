@@ -1,0 +1,25 @@
+{
+  "name": "Atelier du CSE", // Nom complet de l'application
+  "short_name": "AtelierCSE", // Nom court (utilisé sur l'écran d'accueil)
+  "description": "Tableau de bord pour la gestion du CSE.", // Description
+  "start_url": ".", // Point d'entrée (page principale), '.' pour le dossier courant
+  "display": "standalone", // Mode d'affichage (comme une app native)
+  "background_color": "#f8f5f0", // Couleur de fond (ton --papier-bg)
+  "theme_color": "#677BC4", // Couleur thème (ton --accent-couleur-1)
+  "orientation": "portrait-primary", // Orientation préférée (optionnel)
+  "icons": [
+    {
+      "src": "icon/icon-192x192.png", // Chemin vers ton icône
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable" // Important pour les icônes adaptatives
+    },
+    {
+      "src": "icon/icon-512x512.png", // Chemin vers une icône plus grande
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+    // Tu peux ajouter d'autres tailles si nécessaire (72x72, 96x96, 128x128, 144x144...)
+  ]
+}
