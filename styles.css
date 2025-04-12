@@ -656,7 +656,7 @@ form button[type="submit"] {
   padding: 1.5rem;
   background: #fff; /* Fond blanc */
   /* Optionnel: Fond papier millimétré */
-  /* background-image: linear-gradient(rgba(103, 123, 196, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(103, 123, 196, 0.15) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(103, 123, 196, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(103, 123, 196, 0.15) 1px, transparent 1px);
   background-size: 15px 15px; */
   border-radius: 4px;
   box-shadow: var(--ombre-moyenne);
@@ -667,6 +667,163 @@ form button[type="submit"] {
   position: relative; /* Pour Chart.js */
 }
 
+/* styles.css */
+
+/* --- SECTION SPÉCIFIQUE : ANALYSE CAFÉ --- */
+#coffee-analytics-area {
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.5); /* Fond légèrement transparent */
+    border: 1px dashed var(--bordure-crayon);
+    border-radius: 5px;
+}
+
+#coffee-analytics-area h3 {
+    font-family: var(--font-titre-secondaire);
+    color: var(--encre-texte);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    border-bottom: 1px dotted var(--bordure-crayon);
+    padding-bottom: 0.5rem;
+}
+
+.stat-boxes-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-box {
+    background-color: var(--postit-jaune); /* Couleur post-it */
+    padding: 1rem 1.5rem;
+    border-radius: 3px;
+    text-align: center;
+    box-shadow: var(--ombre-legere);
+    min-width: 150px;
+    flex: 1; /* Prend l'espace disponible */
+    border: 1px solid darken(var(--postit-jaune), 10%);
+}
+.stat-box:nth-child(2) { background-color: var(--postit-bleu); border-color: darken(var(--postit-bleu), 10%);}
+.stat-box:nth-child(3) { background-color: var(--postit-rose); border-color: darken(var(--postit-rose), 10%);}
+
+.stat-box h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: var(--encre-secondaire);
+    border-bottom: none; /* Pas de ligne sous ces titres */
+    padding-bottom: 0;
+    text-align: center;
+}
+
+.stat-box p {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--encre-texte);
+    margin: 0;
+    font-family: var(--font-corps);
+}
+
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive */
+    gap: 2rem;
+}
+
+.chart-wrapper {
+    background: #fff;
+    padding: 1rem 1.5rem 1.5rem;
+    border-radius: 4px;
+    box-shadow: var(--ombre-moyenne);
+    border: 1px solid var(--bordure-crayon);
+}
+.chart-wrapper h3 {
+     font-size: 1rem;
+     font-weight: bold;
+     text-align: left;
+     border-bottom: none;
+     padding-bottom: 0;
+     margin-bottom: 1rem;
+}
+
+.chart-box {
+    position: relative; /* Nécessaire pour Chart.js */
+    /* Hauteur peut être ajustée */
+    height: 280px;
+    width: 100%;
+}
+.pie-chart-box { /* Pour que le pie ne soit pas trop écrasé */
+    height: 250px;
+    max-width: 250px; /* Limite la largeur du pie chart */
+    margin: 0 auto; /* Centre le pie chart */
+}
+
+
+/* Style pour le conteneur de la table Tabulator */
+#coffee-table-container {
+  margin-top: 1.5rem;
+  /* Vous pouvez ajouter une bordure, une ombre si vous voulez */
+   border: 1px solid var(--bordure-crayon);
+   border-radius: 4px;
+   box-shadow: var(--ombre-legere);
+   overflow: hidden; /* Important pour les coins arrondis */
+}
+
+/* Améliorer l'apparence des filtres dans l'en-tête */
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title-holder {
+    /* Un peu plus d'espace pour le filtre */
+    padding-bottom: 5px;
+}
+.tabulator .tabulator-header-filter input[type=search],
+.tabulator .tabulator-header-filter input[type=text],
+.tabulator .tabulator-header-filter select {
+    border: 1px solid var(--bordure-crayon) !important;
+    border-radius: 3px !important;
+    padding: 4px 6px !important;
+    font-size: 0.85rem !important;
+    background-color: #fff !important; /* Assure un fond blanc */
+    max-width: 95%; /* Évite que le filtre dépasse trop */
+    margin-top: 4px; /* Espace entre titre et filtre */
+}
+.tabulator .tabulator-header-filter select {
+     padding-right: 20px !important; /* Espace pour la flèche */
+}
+
+/* Améliorer le style du footer de pagination */
+.tabulator .tabulator-footer .tabulator-paginator {
+    font-family: var(--font-corps);
+    font-size: 0.9rem;
+    color: var(--encre-secondaire);
+}
+.tabulator .tabulator-footer .tabulator-page {
+    border-radius: 3px;
+    border: 1px solid var(--bordure-crayon);
+    background: #fff;
+    margin: 0 3px;
+    padding: 3px 8px;
+}
+.tabulator .tabulator-footer .tabulator-page.active {
+    background-color: var(--accent-couleur-1);
+    color: #fff;
+    border-color: var(--accent-couleur-1);
+}
+.tabulator .tabulator-footer .tabulator-page:not(.disabled):hover {
+    background-color: var(--masking-tape-jaune);
+    color: var(--encre-texte);
+}
+
+/* Style pour les boutons d'action dans la table */
+#coffee-table-container .btn-action.delete {
+    /* Le style de base est déjà dans le CSS général */
+    /* Vous pouvez ajouter des ajustements si nécessaire */
+    font-size: 1rem; /* Taille de l'icône */
+}
+#coffee-table-container .btn-action.delete:hover {
+    color: var(--danger-couleur);
+    transform: scale(1.1); /* Effet de survol */
+}
 
 /* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
@@ -683,6 +840,20 @@ form button[type="submit"] {
   #section-badges .filter-zone { flex-direction: column; align-items: stretch;}
   #section-badges .filter-zone .form-group { width: 100%;}
   #section-badges #search-employee-btn { width: 100%;}
+    .charts-container {
+        grid-template-columns: 1fr; /* Une colonne sur mobile */
+        gap: 1.5rem;
+    }
+    .chart-box {
+        height: 250px; /* Réduit un peu la hauteur */
+    }
+     .pie-chart-box {
+        height: 220px;
+        max-width: 220px;
+    }
+     .stat-box {
+        min-width: 120px;
+     }
 }
 
 @media (max-width: 480px) {
