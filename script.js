@@ -1783,7 +1783,6 @@ if (rechargeTable) {
 function deleteCoffeeReport(id) { if (!confirm("Effacer ce signalement ?")) return; db.collection('coffee').doc(id).delete().then(()=>showNotification("Signalement effacé.")).catch(err=>{console.error(err); showNotification("Erreur suppression", true);}); }
 
 // === MODULE SYNTHESE ===
-// === MODULE SYNTHESE ===
 function loadSyntheseData() {
     // 1. Définition couleurs et styles (Assurez-vous qu'elles sont définies dans votre CSS)
     const rootStyles = getComputedStyle(document.documentElement);
@@ -1814,6 +1813,7 @@ function loadSyntheseData() {
         db.collection('partenaires').get(),    // Index 2: Partenaires
         db.collection('contact').where('status', '==', 'en cours').get(), // Index 3: Contacts Actifs
         db.collection('salaries_test').get()   // Index 4: Salariés
+        db.collection('analytics').doc('globalCounts').get() // Index 5: Analytics
     ]).then((snapshots) => {
         console.log("Synthèse: Toutes les données Firebase récupérées.");
 
@@ -1823,6 +1823,7 @@ function loadSyntheseData() {
         const partnersSnapshot = snapshots[2];
         const contactsSnapshot = snapshots[3];
         const salariesSnapshot = snapshots[4]; // Snapshot des salariés
+        const analyticsSnapshot = snapshots[5]; 
 
         // 4. Calcul Pannes Café 'en cours' (depuis variable globale)
         let activeCoffeeCount = 0;
@@ -1920,6 +1921,19 @@ function loadSyntheseData() {
         console.log(`Synthèse - TOTAL Badges distribués (hybride): ${totalBadgesCount}`);
         console.log(`Synthèse - TOTAL Cautions (€) (hybride): ${totalCautionAmount}`);
 
+        // 5bis. <<< EXTRACTION DES COMPTES ANALYTICS >>> (NOUVEAU BLOC)
+    let totalViews = 0;
+    let totalInstalls = 0;
+    if (analyticsSnapshot.exists) {
+        const analyticsData = analyticsSnapshot.data();
+        totalViews = analyticsData.totalViews || 0; // Prend la valeur ou 0 si non défini
+        totalInstalls = analyticsData.totalInstalls || 0;
+    } else {
+        // Le document n'existe peut-être pas encore, ce n'est pas forcément une erreur
+        console.warn("Synthèse: Document 'globalCounts' (ou nom similaire) introuvable dans la collection 'analytics'. Les compteurs Vues/Installs seront à 0.");
+    }
+     console.log(`Synthèse - Vues récupérées: ${totalViews}, Installations récupérées: ${totalInstalls}`);
+        
         // 6. Consolidation des Comptes
         const counts = {
             news: newsSnapshot.size,
@@ -1929,10 +1943,17 @@ function loadSyntheseData() {
             coffee: activeCoffeeCount,
             totalBadges: totalBadgesCount,
             cautionAmount: totalCautionAmount
+            views: totalViews,  
+            installs: totalInstalls 
         };
         console.log("Synthèse - Counts finaux pour affichage:", JSON.stringify(counts));
 
         // 7. Configuration des Cartes de Synthèse
+    const postitViolet = (rootStyles.getPropertyValue('--postit-violet')?.trim() || '#e6e0f8') + 'B3'; // Exemple: Violet clair
+    const postitTurquoise = (rootStyles.getPropertyValue('--postit-turquoise')?.trim() || '#cceeee') + 'B3'; // Exemple: Turquoise clair
+    const borderViolet = rootStyles.getPropertyValue('--border-violet')?.trim() || '#b3a6d9';
+    const borderTurquoise = rootStyles.getPropertyValue('--border-turquoise')?.trim() || '#99cccc';
+
         const synthData = [
             { title: 'Actus', countKey: 'news', color: postitBleu, borderColor: borderBleu },
             { title: 'Membres', countKey: 'members', color: postitRose, borderColor: borderRose },
@@ -1941,6 +1962,8 @@ function loadSyntheseData() {
             { title: 'Pannes Café <small>(act.)</small>', countKey: 'coffee', color: postitPrune, borderColor: borderPrune },
             { title: 'Badges Dist.', countKey: 'totalBadges', color: postitOrange, borderColor: borderOrange },
             { title: 'Total Cautions', countKey: 'cautionAmount', unit: '€', color: postitGris, borderColor: borderGris }
+            { title: 'Vues App', countKey: 'views', color: postitViolet, borderColor: borderViolet },
+        { title: 'Installs PWA', countKey: 'installs', color: postitTurquoise, borderColor: borderTurquoise }
         ];
 
         // 8. Génération des Cartes dans le DOM
