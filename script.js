@@ -1942,7 +1942,7 @@ function loadSyntheseData() {
             contacts: contactsSnapshot.size,
             coffee: activeCoffeeCount,
             totalBadges: totalBadgesCount,
-            cautionAmount: totalCautionAmount
+            cautionAmount: totalCautionAmount,
             views: totalViews,  
             installs: totalInstalls 
         };
