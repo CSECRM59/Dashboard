@@ -1,3 +1,4 @@
+
 /* --- Thème Atelier d'Artiste / Moodboard Dynamique --- */
 
 /* --- Google Font Import --- */
@@ -293,7 +294,11 @@ header h1 {
     gap: 0.8rem;
     align-items: center;
 }
-
+#news-upload-status, #edit-news-upload-status {
+    font-style: italic;
+    color: var(--encre-secondaire);
+    padding-top: 4px;
+}
 /* Style des boutons d'action (crayon, gomme, épingle...) */
 .btn-action {
   background: none;
