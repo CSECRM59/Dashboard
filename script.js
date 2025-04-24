@@ -27,15 +27,42 @@ let problemChartInstance = null; // Nouvelle variable globale
 let machineChartInstance = null; // Nouvelle variable globale
 let statusChartInstance = null;  // Nouvelle variable globale
 
+const IMGUR_CLIENT_ID = "8de31a44dc7b190";
+
 // --- GESTION DES MODALS ---
 const modals = document.querySelectorAll('.modal');
 const closeButtons = document.querySelectorAll('.close');
+
+function resetModalForms(modalElement) {
+    const forms = modalElement.querySelectorAll('form');
+    forms.forEach(form => form.reset());
+
+    // Reset spécifiques aux uploads d'images Actualités
+    const newsStatus = modalElement.querySelector('#news-upload-status, #edit-news-upload-status');
+    const newsUrlHidden = modalElement.querySelector('#news-image-url, #edit-news-image-url');
+    const newsFileInput = modalElement.querySelector('#news-image-file, #edit-news-image-file');
+    const newsImgDisplay = modalElement.querySelector('#edit-current-image-display'); // Pour l'édition
+
+    if (newsStatus) newsStatus.textContent = '';
+    if (newsUrlHidden) newsUrlHidden.value = '';
+    if (newsFileInput) newsFileInput.value = null;
+    if (newsImgDisplay) newsImgDisplay.innerHTML = ''; // Vide l'aperçu
+
+    // Réactiver les boutons submit au cas où ils auraient été désactivés
+    const submitButtons = modalElement.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach(btn => btn.disabled = false);
+
+    console.log(`Formulaires et champs upload réinitialisés pour modal: ${modalElement.id}`);
+}
 
 closeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const modalId = btn.getAttribute('data-modal');
         const modalElement = document.getElementById(modalId);
-        if (modalElement) modalElement.style.display = 'none';
+        if (modalElement) {
+            modalElement.style.display = 'none';
+            resetModalForms(modalElement); // <-- Appel du reset ici
+        }
     });
 });
 
@@ -43,10 +70,100 @@ window.onclick = function (event) {
     modals.forEach(modal => {
         if (event.target === modal) {
             modal.style.display = 'none';
+            resetModalForms(modal); // <-- Appel du reset ici aussi
         }
     });
 };
 
+
+/**
+ * Upload un fichier vers Imgur en utilisant l'API v3 anonyme.
+ * @param {File} file Le fichier image à uploader.
+ * @param {string} statusElementId ID de l'élément pour afficher le statut.
+ * @param {string} urlInputElementId ID de l'input caché pour stocker l'URL.
+ * @param {string} submitButtonId ID du bouton de soumission du formulaire.
+ * @returns {Promise<string|null>} Une promesse qui résout avec l'URL Imgur ou null en cas d'erreur.
+ */
+async function uploadToImgur(file, statusElementId, urlInputElementId, submitButtonId) {
+    const statusDiv = document.getElementById(statusElementId);
+    const urlInput = document.getElementById(urlInputElementId);
+    const submitButton = document.getElementById(submitButtonId);
+
+    if (!file) {
+        if (statusDiv) statusDiv.textContent = "Aucun fichier sélectionné.";
+        return null;
+    }
+
+    if (!IMGUR_CLIENT_ID || IMGUR_CLIENT_ID === "VOTRE_CLIENT_ID_IMGUR") {
+         console.error("Client ID Imgur manquant ou non configuré !");
+         if (statusDiv) statusDiv.textContent = "Erreur: Client ID Imgur non configuré.";
+         showNotification("Erreur de configuration Imgur.", true);
+         return null;
+    }
+
+    // Réinitialiser l'URL précédente et désactiver le bouton
+    if (urlInput) urlInput.value = '';
+    if (statusDiv) statusDiv.textContent = 'Téléversement vers Imgur...';
+    if (submitButton) submitButton.disabled = true;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await fetch('https://api.imgur.com/3/image', {
+            method: 'POST',
+            headers: {
+                // Authentification via le Client ID
+                Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+                // Ne pas définir 'Content-Type', le navigateur le fera avec la bonne boundary pour FormData
+            },
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            console.log('Imgur Upload OK:', data);
+            if (statusDiv) statusDiv.textContent = 'Image téléversée !';
+            if (urlInput) urlInput.value = data.data.link; // Stocke l'URL
+            if (submitButton) submitButton.disabled = false; // Réactive le bouton
+            return data.data.link; // Renvoie l'URL
+        } else {
+            console.error('Erreur API Imgur:', data);
+            if (statusDiv) statusDiv.textContent = `Erreur Imgur: ${data.data?.error || 'Inconnue'}`;
+             showNotification(`Erreur Imgur: ${data.data?.error || 'Inconnue'}`, true);
+            if (submitButton) submitButton.disabled = false;
+            return null;
+        }
+    } catch (error) {
+        console.error('Erreur Fetch vers Imgur:', error);
+        if (statusDiv) statusDiv.textContent = 'Erreur réseau lors du téléversement.';
+        showNotification('Erreur réseau lors du téléversement.', true);
+        if (submitButton) submitButton.disabled = false;
+        return null;
+    }
+}
+// Listener pour le champ d'upload dans la modale d'AJOUT
+const newsImageInput = document.getElementById('news-image-file');
+if (newsImageInput) {
+    newsImageInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            uploadToImgur(file, 'news-upload-status', 'news-image-url', 'submit-add-news');
+        }
+    });
+}
+
+// Listener pour le champ d'upload dans la modale d'ÉDITION
+const editNewsImageInput = document.getElementById('edit-news-image-file');
+if (editNewsImageInput) {
+    editNewsImageInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            uploadToImgur(file, 'edit-news-upload-status', 'edit-news-image-url', 'submit-edit-news');
+        }
+    });
+}
 // --- GESTION DE LA NAVIGATION PAR MENU ---
 const menuItems = document.querySelectorAll('.menu-item');
 const contentSections = document.querySelectorAll('.content');
@@ -366,6 +483,7 @@ function updateNewsList() {
     } else {
         container.querySelector('.empty-message')?.remove();
         newsData.forEach(news => {
+            console.log(`Affichage actu: ${news.id}, URL Image utilisée: '${news.image}'`);
             const item = document.createElement('div'); item.classList.add('grid-item');
             item.innerHTML = `
                 ${news.image ? `<img src="${news.image}" alt="${news.title}">` : ''}
@@ -389,43 +507,122 @@ function updateNewsList() {
          }
     }
 }
-function openEditNewsModal(id) { 
-const news = newsData.find(n => n.id === id); if (!news) return; /* ... Remplir form edit ... */ 
-document.getElementById('edit-news-id').value=id; 
-document.getElementById('edit-news-title').value = news.title; 
-document.getElementById('edit-news-content').value = news.content; 
-document.getElementById('edit-news-date').value = news.date; 
-document.getElementById('edit-news-image').value = news.image || '';
-document.getElementById('edit-news-link').value = news.link || '';
-document.getElementById('edit-news-status').value = news.status; 
-document.getElementById('modal-edit-actualite').style.display = 'block'; }
+function openEditNewsModal(id) {
+    const news = newsData.find(n => n.id === id);
+    if (!news) return;
+
+    // Remplir les champs texte/date/select
+    document.getElementById('edit-news-id').value = id;
+    document.getElementById('edit-news-title').value = news.title;
+    document.getElementById('edit-news-content').value = news.content;
+    document.getElementById('edit-news-date').value = news.date;
+    document.getElementById('edit-news-link').value = news.link || '';
+    document.getElementById('edit-news-status').value = news.status;
+
+    // Gérer l'affichage de l'image actuelle et les champs liés à l'image
+    const currentImageUrl = news.image || '';
+    const imageDisplayDiv = document.getElementById('edit-current-image-display');
+    const originalUrlInput = document.getElementById('edit-news-original-image-url');
+    const newUrlInput = document.getElementById('edit-news-image-url');
+    const fileInput = document.getElementById('edit-news-image-file');
+    const statusDiv = document.getElementById('edit-news-upload-status');
+    const submitButton = document.getElementById('submit-edit-news');
+
+    // Stocker l'URL originale
+    if (originalUrlInput) originalUrlInput.value = currentImageUrl;
+
+    // Afficher l'image actuelle si elle existe
+    if (imageDisplayDiv) {
+        if (currentImageUrl) {
+            imageDisplayDiv.innerHTML = `<p style="font-size:0.9em; margin-bottom:5px;">Image actuelle :</p><img src="${currentImageUrl}" alt="Image actuelle" style="max-width: 150px; max-height: 100px; border: 1px solid #ccc; display: block;">`;
+        } else {
+            imageDisplayDiv.innerHTML = '<p style="font-size:0.9em; margin-bottom:5px;"><i>Pas d\'image actuelle.</i></p>';
+        }
+    }
+
+    // Réinitialiser les champs pour un nouvel upload potentiel
+    if (newUrlInput) newUrlInput.value = '';
+    if (fileInput) fileInput.value = null; // Très important pour pouvoir re-sélectionner le même fichier
+    if (statusDiv) statusDiv.textContent = '';
+    if (submitButton) submitButton.disabled = false; // Assurer que le bouton est actif
+
+    // Afficher la modale
+    document.getElementById('modal-edit-actualite').style.display = 'block';
+}
+
 
 function deleteNews(id) { if (!confirm("Effacer cette actu ?")) return; db.collection('news').doc(id).delete().then(()=>showNotification("Actu effacée.")).catch(err=>{console.error(err); showNotification("Erreur suppression", true);}); }
+
 // Form Listeners Actus
-document.getElementById('form-actualites').addEventListener('submit', e => { e.preventDefault(); 
-const data={title: e.target['news-title'].value, 
-content:e.target['news-content'].value, 
-date:e.target['news-date'].value, 
-image:e.target['news-image'].value,
-link: e.target['news-link'].value,
-status:e.target['news-status'].value}; 
 
-db.collection('news').add(data).then(()=>{ showNotification('Actualité ajoutée!'); 
-e.target.reset(); 
-document.getElementById('modal-actualites').style.display = 'none'; }).catch(err=>{ 
-console.error("Erreur ajout actualité:", err); showNotification('Erreur ajout', true);}); });
+document.getElementById('form-actualites').addEventListener('submit', e => {
+    e.preventDefault();
+    const imageUrl = document.getElementById('news-image-url').value; // <-- Lire l'URL depuis l'input caché
 
-document.getElementById('form-edit-actualite').addEventListener('submit', e => { e.preventDefault(); 
-const id=e.target['edit-news-id'].value; 
-const data={title: e.target['edit-news-title'].value, 
-content:e.target['edit-news-content'].value, 
-date:e.target['edit-news-date'].value, 
-image:e.target['edit-news-image'].value,
-link: e.target['edit-news-link'].value,
-status:e.target['edit-news-status'].value}; 
+    const data = {
+        title: e.target['news-title'].value,
+        content: e.target['news-content'].value,
+        date: e.target['news-date'].value,
+        image: imageUrl, // <-- Utiliser l'URL Imgur (peut être vide si upload échoué/pas fait)
+        link: e.target['news-link'].value.trim(),
+        status: e.target['news-status'].value
+    };
 
-db.collection('news').doc(id).update(data).then(()=>{ showNotification('Actualité modifiée!'); document.getElementById('modal-edit-actualite').style.display = 'none'; }).catch(err=>{ console.error("Erreur modification actualité:", err); showNotification('Erreur modif', true);}); });
+    // Bloquer re-soumission pendant l'enregistrement DB
+    const submitButton = document.getElementById('submit-add-news');
+    if(submitButton) submitButton.disabled = true;
 
+    db.collection('news').add(data).then(() => {
+        showNotification('Actualité ajoutée!');
+        e.target.reset(); // Réinitialise le formulaire
+        document.getElementById('news-image-url').value = ''; // Vide l'URL cachée
+        document.getElementById('news-upload-status').textContent = ''; // Vide le statut
+        const fileInput = document.getElementById('news-image-file');
+        if(fileInput) fileInput.value = null; // Réinitialise le champ fichier
+        document.getElementById('modal-actualites').style.display = 'none';
+    }).catch(err => {
+        console.error("Erreur ajout actualité:", err);
+        showNotification('Erreur ajout', true);
+    }).finally(() => {
+         if(submitButton) submitButton.disabled = false; // Réactiver dans tous les cas
+    });
+});
+
+document.getElementById('form-edit-actualite').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = e.target['edit-news-id'].value;
+    const newImageUrl = document.getElementById('edit-news-image-url').value; // URL si NOUVEL upload
+    const originalImageUrl = document.getElementById('edit-news-original-image-url').value; // URL avant modif
+
+    // Choisir l'URL à sauvegarder: la nouvelle si elle existe, sinon l'originale
+    const finalImageUrl = newImageUrl ? newImageUrl : originalImageUrl;
+
+    const data = {
+        title: e.target['edit-news-title'].value,
+        content: e.target['edit-news-content'].value,
+        date: e.target['edit-news-date'].value,
+        image: finalImageUrl, // <-- Utiliser l'URL finale
+        link: e.target['edit-news-link'].value.trim(),
+        status: e.target['edit-news-status'].value
+    };
+
+     // Bloquer re-soumission pendant l'enregistrement DB
+    const submitButton = document.getElementById('submit-edit-news');
+    if(submitButton) submitButton.disabled = true;
+
+
+    db.collection('news').doc(id).update(data).then(() => {
+        showNotification('Actualité modifiée!');
+        // Pas besoin de reset le form ici, on ferme juste la modale
+        document.getElementById('modal-edit-actualite').style.display = 'none';
+        // Le reset des champs upload/status se fera à la prochaine ouverture
+    }).catch(err => {
+        console.error("Erreur modification actualité:", err);
+        showNotification('Erreur modif', true);
+    }).finally(() => {
+         if(submitButton) submitButton.disabled = false; // Réactiver
+    });
+});
 
 // === MODULE MEMBRES ===
 function loadMembersFromFirebase() {
