@@ -834,6 +834,78 @@ form button[type="submit"] {
     transform: scale(1.1); /* Effet de survol */
 }
 
+/* Styles pour cacher/afficher les conteneurs */
+    #app-container { display: none; } /* Caché par défaut */
+    #login-container {
+      display: flex; /* Ou block */
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh; /* Centrer verticalement */
+      text-align: center;
+    }
+    #login-container h1 {
+      font-family: var(--font-titre-principal);
+      font-size: 2rem;
+      color: var(--encre-texte);
+      margin-bottom: 1rem;
+    }
+     #google-signin-btn {
+        /* Style du bouton (peut reprendre .btn .btn-primary) */
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-family: var(--font-bouton);
+        background-color: #4285F4; /* Couleur Google */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        box-shadow: var(--ombre-legere);
+        transition: background-color 0.3s;
+        display: inline-flex; /* Pour aligner icône et texte */
+        align-items: center;
+        gap: 10px; /* Espace entre icône et texte */
+     }
+      #google-signin-btn:hover {
+        background-color: #357ae8;
+      }
+      #login-error {
+        color: var(--danger-couleur);
+        margin-top: 1.5rem;
+        font-weight: bold;
+        display: none; /* Caché par défaut */
+        max-width: 400px;
+      }
+      /* Style optionnel pour le bouton de déconnexion */
+      #user-info-area {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 0.9em;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px 10px;
+        border-radius: 4px;
+        box-shadow: var(--ombre-legere);
+        display: none; /* Géré par JS */
+        align-items: center;
+        gap: 10px;
+      }
+       #google-signout-btn {
+          background: none;
+          border: 1px solid var(--encre-secondaire);
+          color: var(--encre-secondaire);
+          padding: 2px 6px;
+          font-size: 0.8em;
+          cursor: pointer;
+          border-radius: 3px;
+          margin-left: 5px;
+       }
+        #google-signout-btn:hover {
+          background-color: var(--danger-couleur);
+          color: white;
+          border-color: var(--danger-couleur);
+        }
+
 /* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
   h1 { font-size: 2.2rem; }
