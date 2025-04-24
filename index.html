@@ -301,9 +301,13 @@
           <input type="date" id="news-date" required>
         </div>
         <div class="form-group">
-          <label for="news-image">URL Image</label>
-          <input type="url" id="news-image" placeholder="http://...">
-        </div>
+    <label for="news-image-file">Choisir une Image</label>
+    <input type="file" id="news-image-file" accept="image/png, image/jpeg, image/gif">
+    <!-- Zone pour afficher le statut de l'upload -->
+    <div id="news-upload-status" style="font-size: 0.85em; margin-top: 5px; min-height: 1.2em;"></div>
+    <!-- Input caché pour stocker l'URL Imgur finale -->
+    <input type="hidden" id="news-image-url">
+</div>
         <div class="form-group">
           <label for="news-link">Lien Internet (Optionnel)</label>
           <input type="url" id="news-link" placeholder="https://www.exemple.com">
@@ -315,7 +319,7 @@
             <option value="Brouillon">Brouillon</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-primary">Noter</button>
+        <button type="submit" id="submit-add-news" class="btn btn-primary">Noter</button>
       </form>
     </div>
   </div>
@@ -337,10 +341,24 @@
           <label for="edit-news-date">Date</label>
           <input type="date" id="edit-news-date" required>
         </div>
-        <div class="form-group">
-          <label for="edit-news-image">URL Image</label>
-          <input type="url" id="edit-news-image" placeholder="http://...">
-        </div>
+        <input type="hidden" id="edit-news-id">
+ <!-- Champ caché pour garder l'URL existante -->
+        <input type="hidden" id="edit-news-existing-url">
+
+       <div class="form-group">
+    <label for="edit-news-image-file">Remplacer l'Image (Optionnel)</label>
+    <!-- Affichage de l'image actuelle si elle existe -->
+    <div id="edit-current-image-display" style="margin-bottom: 10px;">
+        <!-- L'image actuelle sera injectée ici par JS -->
+    </div>
+    <input type="file" id="edit-news-image-file" accept="image/png, image/jpeg, image/gif">
+    <!-- Zone pour afficher le statut de l'upload -->
+    <div id="edit-news-upload-status" style="font-size: 0.85em; margin-top: 5px; min-height: 1.2em;"></div>
+    <!-- Input caché pour stocker la NOUVELLE URL Imgur finale si une nouvelle image est uploadée -->
+    <input type="hidden" id="edit-news-image-url">
+    <!-- Stocker l'URL originale au cas où l'utilisateur n'uploade pas de nouvelle image -->
+    <input type="hidden" id="edit-news-original-image-url">
+</div>
         <div class="form-group">
           <label for="edit-news-link">Lien Internet (Optionnel)</label>
           <input type="url" id="edit-news-link" placeholder="https://www.exemple.com">
@@ -352,7 +370,7 @@
             <option value="Brouillon">Brouillon</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-primary">Mettre à jour</button>
+        <button type="submit" id="submit-edit-news" class="btn btn-primary">Mettre à jour</button>
       </form>
     </div>
   </div>
