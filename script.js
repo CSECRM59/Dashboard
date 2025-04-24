@@ -10,6 +10,8 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 // --- VARIABLES GLOBALES ---
 let newsData = [];
@@ -29,6 +31,535 @@ let statusChartInstance = null;  // Nouvelle variable globale
 
 const IMGUR_CLIENT_ID = "8de31a44dc7b190";
 
+let appInitialized = false;
+
+const loginContainer = document.getElementById('login-container');
+const appContainer = document.getElementById('app-container');
+const signInButton = document.getElementById('google-signin-btn');
+const signOutButton = document.getElementById('google-signout-btn');
+const loginErrorMsg = document.getElementById('login-error');
+const userInfoArea = document.getElementById('user-info-area');
+const userEmailDisplay = document.getElementById('user-email-display');
+
+// --- OBSERVATEUR ÉTAT AUTHENTIFICATION ---
+function resetAppState() {
+    console.log("Réinitialisation de l'état de l'application...");
+    // Vider les données
+    newsData = []; membersData = []; partnersData = []; demandesData = []; calendarData = [];
+    salariesDataCache = null; coffeeData = [];
+    // Détruire graphiques/tables
+    if (mySynthChart) try { mySynthChart.destroy(); } catch(e){ console.error("Erreur destruction mySynthChart", e); } finally { mySynthChart = null; }
+    if (coffeeTable) try { coffeeTable.destroy(); } catch(e){ console.error("Erreur destruction coffeeTable", e); } finally { coffeeTable = null; }
+    if (rechargeTable) try { rechargeTable.destroy(); } catch(e){ console.error("Erreur destruction rechargeTable", e); } finally { rechargeTable = null; }
+    if (problemChartInstance) try { problemChartInstance.destroy(); } catch(e){ console.error("Erreur destruction problemChartInstance", e); } finally { problemChartInstance = null; }
+    if (machineChartInstance) try { machineChartInstance.destroy(); } catch(e){ console.error("Erreur destruction machineChartInstance", e); } finally { machineChartInstance = null; }
+    if (statusChartInstance) try { statusChartInstance.destroy(); } catch(e){ console.error("Erreur destruction statusChartInstance", e); } finally { statusChartInstance = null; }
+
+    // Vider les conteneurs d'affichage
+    // Vérifie attentivement ces lignes =======================================>
+    try {
+        document.getElementById('news-list')?.querySelectorAll('.grid-item:not(.add-item)').forEach(i => i.remove());
+        document.getElementById('members-list')?.querySelectorAll('.grid-item:not(.add-item)').forEach(i => i.remove());
+        document.getElementById('partners-list')?.querySelectorAll('.grid-item:not(.add-item)').forEach(i => i.remove());
+        const demandesList = document.getElementById('demandes-list');
+        if (demandesList) demandesList.innerHTML = ''; // Vider demandes
+        document.getElementById('calendar-list')?.querySelectorAll('.grid-item:not(.add-item)').forEach(i => i.remove());
+        const coffeeTableContainer = document.getElementById('coffee-table-container');
+        if (coffeeTableContainer) coffeeTableContainer.innerHTML = ''; // Vider conteneur table
+        const rechargeTableContainer = document.getElementById('recharge-table-container');
+        if (rechargeTableContainer) rechargeTableContainer.innerHTML = ''; // Vider conteneur table
+        const synthContainer = document.getElementById('synthese-container');
+        if (synthContainer) synthContainer.innerHTML = ''; // Vider cartes synthèse
+    } catch (error) {
+         console.error("Erreur lors du nettoyage des conteneurs DOM:", error);
+    }
+    // ========================================================================>
+
+    // Effacer le canvas du graphique synthèse
+    const synthCtx = document.getElementById('synth-chart')?.getContext('2d');
+    if (synthCtx) {
+        try {
+            synthCtx.clearRect(0, 0, synthCtx.canvas.width, synthCtx.canvas.height);
+        } catch(e) { console.error("Erreur clearRect canvas synthèse:", e); }
+    }
+
+    // Vider les stats café
+     const statTotal = document.getElementById('stat-total-reports');
+     const statEnCours = document.getElementById('stat-reports-en-cours');
+     const statTraite = document.getElementById('stat-reports-traite');
+     if(statTotal) statTotal.textContent = '0';
+     if(statEnCours) statEnCours.textContent = '0';
+     if(statTraite) statTraite.textContent = '0';
+
+    // Vider zone badges
+    const searchInput = document.getElementById('employee-search');
+    const searchResults = document.getElementById('search-results');
+    if(searchInput) searchInput.value = '';
+    if(searchResults) searchResults.innerHTML = '';
+    // La fonction showBadgeUISection est définie ailleurs
+    if (typeof showBadgeUISection === 'function') {
+        showBadgeUISection(null);
+    }
+
+
+    currentActiveSectionId = null; // Réinitialiser section active
+    appInitialized = false; // Marquer comme non initialisé
+    console.log("État application réinitialisé.");
+}
+
+// --- GESTION UI LOGIN/APP ---
+function showLoginScreen(errorMessage = null) {
+    if (appContainer) appContainer.style.display = 'none';
+    if (loginContainer) loginContainer.style.display = 'flex'; // Ou 'block' selon ton CSS
+    if (loginErrorMsg) {
+        if (errorMessage) {
+            loginErrorMsg.textContent = errorMessage;
+            loginErrorMsg.style.display = 'block';
+        } else {
+            loginErrorMsg.style.display = 'none';
+        }
+    }
+    if(userInfoArea) userInfoArea.style.display = 'none'; // Cacher infos user
+}
+
+function showAppScreen(user) {
+    if (loginContainer) loginContainer.style.display = 'none';
+    if (appContainer) appContainer.style.display = 'block'; // Afficher l'app
+    if (userInfoArea) {
+         if (user && userEmailDisplay) {
+             userEmailDisplay.textContent = user.email;
+             userInfoArea.style.display = 'flex'; // Afficher zone user
+         } else {
+             userInfoArea.style.display = 'none';
+         }
+    }
+}
+// --- VÉRIFICATION AUTORISATION ---
+/**
+ * Vérifie si un email est présent dans la collection 'membres'.
+ * @param {string} email L'email à vérifier.
+ * @returns {Promise<boolean>} True si autorisé, False sinon.
+ */
+async function checkAuthorization(email) {
+    if (!email) {
+        console.log("Email non fourni pour la vérification.");
+        return false;
+    }
+    try {
+        console.log(`Vérification autorisation pour: ${email}`);
+        // Utilise 'Mail' comme dans ta structure
+        const querySnapshot = await db.collection('membres')
+                                      .where('Mail', '==', email)
+                                      .limit(1)
+                                      .get();
+        const isAuthorized = !querySnapshot.empty;
+        if (isAuthorized) {
+            console.log(`Email ${email} trouvé dans la collection membres. Autorisé.`);
+        } else {
+            console.log(`Email ${email} NON trouvé dans la collection membres. Accès refusé.`);
+        }
+        return isAuthorized;
+    } catch (error) {
+        console.error("Erreur Firestore lors de la vérification d'autorisation:", error);
+        // Sécurité : refuser l'accès en cas d'erreur de BDD
+        return false;
+    }
+}
+// --- ACTIONS AUTHENTIFICATION ---
+async function handleGoogleSignIn() {
+    if (loginErrorMsg) loginErrorMsg.style.display = 'none'; // Cache ancienne erreur
+    try {
+        // Utilise signInWithPopup pour ouvrir la fenêtre Google
+        const result = await auth.signInWithPopup(googleProvider);
+        // La suite est gérée par onAuthStateChanged
+        console.log("Popup Google Sign-In réussie pour:", result?.user?.email);
+    } catch (error) {
+        console.error("Erreur Google Sign-In:", error);
+        // Afficher erreurs spécifiques si possible
+        let message = "Erreur lors de la connexion Google.";
+        if (error.code === 'auth/popup-closed-by-user') {
+            message = "La fenêtre de connexion a été fermée.";
+        } else if (error.code === 'auth/cancelled-popup-request') {
+            message = "Connexion annulée.";
+        }
+        showLoginScreen(message);
+    }
+}
+
+function handleSignOut() {
+    auth.signOut().then(() => {
+        console.log("Déconnexion réussie.");
+        // onAuthStateChanged gérera le changement d'UI
+    }).catch(error => {
+        console.error("Erreur lors de la déconnexion:", error);
+    });
+}
+
+/**
+ * Met en place l'écouteur Firebase qui réagit aux changements d'état
+ * de connexion/déconnexion de l'utilisateur. C'est le point central
+ * qui détermine si l'écran de login ou l'application doit être affichée.
+ */
+function setupAuthObserver() {
+    auth.onAuthStateChanged(async (user) => {
+        console.log("Auth state changed -> User:", user ? user.email : null); // Utile pour le débogage
+
+        if (user) {
+            // L'utilisateur est connecté à Firebase Auth.
+            // Étape 1: Vérifier si son email est dans la liste des membres autorisés.
+            let isAuthorized = false;
+            try {
+                isAuthorized = await checkAuthorization(user.email);
+            } catch (error) {
+                // Si la vérification elle-même échoue (ex: problème réseau, règles Firestore incorrectes),
+                // on considère l'utilisateur comme non autorisé par sécurité.
+                console.error("Erreur durant la vérification d'autorisation:", error);
+                isAuthorized = false;
+                // Afficher une erreur plus spécifique avant la déconnexion ?
+                showNotification("Erreur lors de la vérification des permissions.", true);
+            }
+
+            // Étape 2: Agir en fonction de l'autorisation
+            if (isAuthorized) {
+                // **CAS 1: Utilisateur connecté ET autorisé**
+                console.log(`Utilisateur ${user.email} autorisé. Affichage de l'application.`);
+                // Affiche l'interface principale de l'application.
+                showAppScreen(user);
+                // Initialise toutes les fonctionnalités (chargement data, listeners, etc.).
+                // Cette fonction contient le flag `appInitialized` pour éviter les ré-initialisations.
+                initializeAppFeatures();
+            } else {
+                // **CAS 2: Utilisateur connecté MAIS non autorisé**
+                console.warn(`Accès refusé pour ${user.email}. Votre email n'est pas enregistré comme membre. Déconnexion...`);
+                // Informer l'utilisateur *avant* de déconnecter.
+                showNotification("Accès refusé. Votre email n'est pas autorisé.", true); // Utilise alert ou une notification plus visible
+
+                try {
+                    // Déconnecter l'utilisateur de Firebase Authentication.
+                    await auth.signOut();
+                    // Note importante: La déconnexion va déclencher un NOUVEL événement
+                    // onAuthStateChanged, mais cette fois avec user=null. C'est cet événement
+                    // (le bloc 'else' ci-dessous) qui s'occupera de nettoyer l'état (resetAppState)
+                    // et d'afficher l'écran de login (showLoginScreen).
+                    // C'est une approche plus propre que de le faire ici directement.
+                } catch (signOutError) {
+                    // Gérer le cas (rare) où la déconnexion échoue.
+                    console.error("Erreur critique lors de la déconnexion forcée après refus d'accès:", signOutError);
+                    // L'utilisateur est dans un état incohérent. On force l'affichage du login avec une erreur.
+                    resetAppState(); // Tenter de nettoyer quand même
+                    showLoginScreen("Erreur critique lors de la déconnexion. Veuillez contacter l'administrateur.");
+                }
+            }
+        } else {
+            // **CAS 3: Utilisateur déconnecté** (ou état initial avant la première connexion)
+            console.log("Utilisateur déconnecté ou état initial non connecté.");
+            // Nettoie toutes les données, instances de tables/graphiques, etc.
+            resetAppState();
+            // Affiche l'écran de connexion standard.
+            showLoginScreen();
+        }
+    });
+
+    console.log("Observateur d'état d'authentification mis en place.");
+}
+// --- INITIALISATION SPÉCIFIQUE APP (après auth) ---
+function initializeAppFeatures() {
+    // Empêche ré-initialisation si déjà fait
+    if (appInitialized) {
+        console.log("Fonctionnalités déjà initialisées.");
+        return;
+    }
+    console.log("Initialisation des fonctionnalités principales de l'application...");
+
+    // --- 1. Attacher les Listeners Généraux et Spécifiques ---
+
+    // a) Listeners de délégation pour actions Edit/Delete/Statut
+    console.log(" -> Attachement des listeners d'actions déléguées...");
+    contentSections.forEach(section => {
+        // S'assurer que les éléments existent avant d'attacher
+        const containerGrid = section.querySelector('.grid');
+        const containerSelect = section.querySelector('select.contact-status, select.coffee-status');
+        const containerTable = section.querySelector('#coffee-table-container, #recharge-table-container');
+        if (containerGrid || containerSelect || containerTable) {
+            // La fonction setupActionListeners est définie ailleurs dans le script
+            setupActionListeners(section);
+        }
+    });
+
+    // b) Listeners spécifiques aux formulaires (Add/Edit Modals)
+    console.log(" -> Attachement des listeners de formulaires Modals...");
+
+    // ACTUALITÉS
+    const formActus = document.getElementById('form-actualites');
+    const formEditActus = document.getElementById('form-edit-actualite');
+    const newsImageInputAdd = document.getElementById('news-image-file');
+    const newsImageInputEdit = document.getElementById('edit-news-image-file');
+
+    if (formActus) {
+        formActus.addEventListener('submit', e => {
+            e.preventDefault();
+            const imageUrl = document.getElementById('news-image-url').value;
+            const data = {
+                title: e.target['news-title'].value,
+                content: e.target['news-content'].value,
+                date: e.target['news-date'].value,
+                image: imageUrl,
+                link: e.target['news-link'].value.trim(),
+                status: e.target['news-status'].value
+            };
+            const submitButton = document.getElementById('submit-add-news');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('news').add(data).then(() => {
+                showNotification('Actualité ajoutée!');
+                resetModalForms(formActus.closest('.modal')); // Reset via fonction centralisée
+                document.getElementById('modal-actualites').style.display = 'none';
+            }).catch(err => {
+                console.error("Erreur ajout actualité:", err);
+                showNotification('Erreur ajout', true);
+            }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+     if (newsImageInputAdd) {
+        newsImageInputAdd.addEventListener('change', (event) => {
+             const file = event.target.files[0];
+             if (file) {
+                 uploadToImgur(file, 'news-upload-status', 'news-image-url', 'submit-add-news');
+             }
+        });
+     }
+
+    if (formEditActus) {
+        formEditActus.addEventListener('submit', e => {
+            e.preventDefault();
+            const id = e.target['edit-news-id'].value;
+            const newImageUrl = document.getElementById('edit-news-image-url').value;
+            const originalImageUrl = document.getElementById('edit-news-original-image-url').value;
+            const finalImageUrl = newImageUrl ? newImageUrl : originalImageUrl;
+            const data = {
+                title: e.target['edit-news-title'].value,
+                content: e.target['edit-news-content'].value,
+                date: e.target['edit-news-date'].value,
+                image: finalImageUrl,
+                link: e.target['edit-news-link'].value.trim(),
+                status: e.target['edit-news-status'].value
+            };
+            const submitButton = document.getElementById('submit-edit-news');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('news').doc(id).update(data).then(() => {
+                showNotification('Actualité modifiée!');
+                 resetModalForms(formEditActus.closest('.modal')); // Reset via fonction centralisée
+                document.getElementById('modal-edit-actualite').style.display = 'none';
+            }).catch(err => {
+                console.error("Erreur modification actualité:", err);
+                showNotification('Erreur modif', true);
+            }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+     if (newsImageInputEdit) {
+         newsImageInputEdit.addEventListener('change', (event) => {
+             const file = event.target.files[0];
+             if (file) {
+                 uploadToImgur(file, 'edit-news-upload-status', 'edit-news-image-url', 'submit-edit-news');
+             }
+         });
+     }
+
+
+    // MEMBRES
+    const formMembres = document.getElementById('form-membres');
+    const formEditMembres = document.getElementById('form-edit-membre');
+
+    if (formMembres) {
+        formMembres.addEventListener('submit', e => {
+            e.preventDefault();
+            const data={Nom:e.target['member-nom'].value, Prenom:e.target['member-prenom'].value, Mail:e.target['member-mail'].value, Operation:e.target['member-operation'].value, Role:e.target['member-role'].value, PhotoURL:e.target['member-photo'].value};
+            const submitButton = formMembres.querySelector('button[type="submit"]');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('membres').add(data).then(()=>{
+                showNotification('Membre ajouté!');
+                resetModalForms(formMembres.closest('.modal'));
+                document.getElementById('modal-membres').style.display = 'none';
+            }).catch(err=>{
+                console.error(err); showNotification('Erreur ajout membre', true);
+            }).finally(() => {
+                if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+
+    if (formEditMembres) {
+        formEditMembres.addEventListener('submit', e => {
+            e.preventDefault();
+            const id=e.target['edit-member-id'].value;
+            const data={Nom:e.target['edit-member-nom'].value, Prenom:e.target['edit-member-prenom'].value, Mail:e.target['edit-member-mail'].value, Operation:e.target['edit-member-operation'].value, Role:e.target['edit-member-role'].value, PhotoURL:e.target['edit-member-photo'].value};
+            const submitButton = formEditMembres.querySelector('button[type="submit"]');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('membres').doc(id).update(data).then(()=>{
+                showNotification('Membre modifié!');
+                 resetModalForms(formEditMembres.closest('.modal'));
+                document.getElementById('modal-edit-membre').style.display = 'none';
+            }).catch(err=>{
+                console.error(err); showNotification('Erreur modif membre', true);
+            }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+
+    // PARTENAIRES
+    const formPartenaires = document.getElementById('form-partenaires');
+    const formEditPartenaires = document.getElementById('form-edit-partenaire');
+
+    if (formPartenaires) {
+        formPartenaires.addEventListener('submit', e => {
+            e.preventDefault();
+            const data={Categorie:e.target['partenaire-categorie'].value, Nom:e.target['partenaire-nom'].value, Description:e.target['partenaire-description'].value, Lien:e.target['partenaire-lien'].value, Logo:e.target['partenaire-logo'].value};
+            const submitButton = formPartenaires.querySelector('button[type="submit"]');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('partenaires').add(data).then(()=>{
+                showNotification('Partenaire ajouté!');
+                 resetModalForms(formPartenaires.closest('.modal'));
+                document.getElementById('modal-partenaires').style.display = 'none';
+             }).catch(err=>{
+                 console.error(err); showNotification('Erreur ajout partenaire', true);
+             }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+             });
+        });
+    }
+
+    if (formEditPartenaires) {
+        formEditPartenaires.addEventListener('submit', e => {
+            e.preventDefault();
+            const id=e.target['edit-partenaire-id'].value;
+            const data={Categorie:e.target['edit-partenaire-categorie'].value, Nom:e.target['edit-partenaire-nom'].value, Description:e.target['edit-partenaire-description'].value, Lien:e.target['edit-partenaire-lien'].value, Logo:e.target['edit-partenaire-logo'].value};
+            const submitButton = formEditPartenaires.querySelector('button[type="submit"]');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('partenaires').doc(id).update(data).then(()=>{
+                showNotification('Partenaire modifié!');
+                 resetModalForms(formEditPartenaires.closest('.modal'));
+                document.getElementById('modal-edit-partenaire').style.display = 'none';
+            }).catch(err=>{
+                 console.error(err); showNotification('Erreur modif partenaire', true);
+            }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+
+    // CALENDRIER
+    const formCalendrier = document.getElementById('form-calendrier');
+    const formEditCalendrier = document.getElementById('form-edit-calendrier');
+
+    if (formCalendrier) {
+        formCalendrier.addEventListener('submit', e => {
+            e.preventDefault();
+            const data={title:e.target['event-title'].value, description:e.target['event-description'].value, date:e.target['event-date'].value, time:e.target['event-time'].value, endDate:e.target['event-end-date'].value, endTime:e.target['event-end-time'].value};
+             const submitButton = formCalendrier.querySelector('button[type="submit"]');
+             if(submitButton) submitButton.disabled = true;
+            db.collection('calendrier').add(data).then(()=>{
+                showNotification('Événement ajouté!');
+                 resetModalForms(formCalendrier.closest('.modal'));
+                document.getElementById('modal-calendrier').style.display = 'none';
+            }).catch(err=>{
+                 console.error(err); showNotification('Erreur ajout événement', true);
+            }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+
+    if (formEditCalendrier) {
+        formEditCalendrier.addEventListener('submit', e => {
+            e.preventDefault();
+            const id=e.target['edit-event-id'].value;
+            const data={title:e.target['edit-event-title'].value, description:e.target['edit-event-description'].value, date:e.target['edit-event-date'].value, time:e.target['edit-event-time'].value, endDate:e.target['edit-event-end-date'].value, endTime:e.target['edit-event-end-time'].value};
+            const submitButton = formEditCalendrier.querySelector('button[type="submit"]');
+            if(submitButton) submitButton.disabled = true;
+            db.collection('calendrier').doc(id).update(data).then(()=>{
+                showNotification('Événement modifié!');
+                 resetModalForms(formEditCalendrier.closest('.modal'));
+                document.getElementById('modal-edit-calendrier').style.display = 'none';
+            }).catch(err=>{
+                 console.error(err); showNotification('Erreur modif événement', true);
+            }).finally(() => {
+                 if(submitButton) submitButton.disabled = false;
+            });
+        });
+    }
+
+    // c) Listeners pour les boutons d'export CSV/PDF Café
+    console.log(" -> Attachement des listeners d'export Café...");
+    const exportCsvBtn = document.getElementById('export-recharge-csv-btn');
+    const exportPdfBtn = document.getElementById('export-recharge-pdf-btn');
+
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', () => {
+            if (rechargeTable) {
+                try {
+                    rechargeTable.download("csv", "problemes_rechargement_cafe.csv", { delimiter: ";" });
+                } catch (error) { console.error("Erreur export CSV:", error); showNotification("Erreur export CSV.", true); }
+            } else { showNotification("Tableau des rechargements non prêt.", true); }
+        });
+    }
+
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', () => {
+            if (rechargeTable) {
+                // Vérifier si les librairies PDF sont chargées
+                if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF === 'undefined' || !jspdf.jsPDF.API.autoTable) {
+                     console.error("Librairies jsPDF ou jsPDF-AutoTable non chargées !");
+                     showNotification("Erreur : Librairies PDF manquantes.", true);
+                     return;
+                }
+                try {
+                    rechargeTable.download("pdf", "problemes_rechargement_cafe.pdf", { orientation: "landscape", title: "Problèmes Rechargement Café" });
+                } catch (error) { console.error("Erreur export PDF:", error); showNotification("Erreur export PDF.", true); }
+            } else { showNotification("Tableau des rechargements non prêt.", true); }
+        });
+    }
+
+    // d) Listeners spécifiques aux Badges Café
+    console.log(" -> Configuration des écouteurs Badges post-auth...");
+    // La fonction setupBadgeEventListeners est définie ailleurs dans le script
+    setupBadgeEventListeners();
+
+    // --- 2. Charger les Données Initiales ---
+    console.log(" -> Chargement des données Firebase post-auth...");
+    loadNewsFromFirebase();
+    loadMembersFromFirebase();
+    loadPartnersFromFirebase();
+    loadDemandesFromFirebase();
+    loadCalendarFromFirebase();
+    loadCoffeeReports(); // Important : Charger AVANT d'activer une section dépendante (comme Synthèse ou Café)
+
+    // --- 3. Enregistrement Service Worker ---
+    if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
+      console.log(" -> Enregistrement SW post-auth.");
+      // Utiliser 'load' pour ne pas bloquer le rendu
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('Service Worker enregistré avec succès ! Scope:', registration.scope);
+          })
+          .catch(error => {
+            console.error('Échec de l\'enregistrement du Service Worker:', error);
+          });
+      });
+    }
+
+    // --- 4. Initialisation de l'Interface et Navigation ---
+    console.log(" -> Activation section par défaut post-auth...");
+    applyRandomRotation('.menu-item'); // Appliquer rotation menu une fois l'app affichée
+    initializeDefaultSection('synthese'); // Lance la navigation initiale vers la section souhaitée
+
+    appInitialized = true; // Marquer comme initialisé
+    console.log("Initialisation des fonctionnalités terminée.");
+}
 // --- GESTION DES MODALS ---
 const modals = document.querySelectorAll('.modal');
 const closeButtons = document.querySelectorAll('.close');
@@ -1695,11 +2226,32 @@ function initializeCoffeeTable() {
                 return "?";
             }
         },
+        {
+             title: "Téléphone", field: "telephone", // Nouveau champ
+             width: 130, headerFilter: "input",
+             formatter: function(cell){ return cell.getValue() || "N/A"; }
+         },
         { title: "Machine", field: "machine", width: 150, headerFilter: "input" },
         { title: "Problème", field: "probleme", minWidth: 200, headerTooltip:true, formatter: "textarea", headerFilter: "input" },
         { title: "Par", field: "nom", width: 150, headerFilter: "input" },
         { title: "Email", field: "email", width: 180, formatter: "link", formatterParams: { urlPrefix: "mailto:" }, headerTooltip:true, headerFilter: "input" },
         { title: "Opération", field: "operation", width: 100, headerFilter: "input" },
+        {
+             title: "Date Évén.", field: "dateEvenementRaw", // Utiliser ce champ
+             width: 100, hozAlign: "center", sorter: "date", sorterParams: { format: "YYYY-MM-DD" },
+             formatter: function(cell){ return cell.getValue() || "-"; }
+         },
+         {
+             title: "Heure Évén.", field: "heureEvenementRaw", // Utiliser ce champ
+             width: 90, hozAlign: "center", sorter: "time", sorterParams: { format: "HH:mm" },
+             formatter: function(cell){ return cell.getValue() || "-"; }
+         },
+         // --- NOUVEAU : Moyen de Paiement ---
+         {
+             title: "Paiement", field: "paiement", // Utiliser ce champ
+             width: 100, headerFilter: "input",
+             formatter: function(cell){ return cell.getValue() || "N/A"; }
+         },
         { title: "Commentaire", field: "commentaire", minWidth: 150, formatter: "textarea", headerTooltip:true, headerFilter: "input" },
         {
             title: "Statut", field: "status", width: 120, hozAlign: "center",
@@ -1824,6 +2376,12 @@ function initializeRechargeTable(initialData = [])  {
             sorterParams: { format: "HH:mm" }, // Ajustez si format différent
              formatter: function(cell){ return cell.getValue() || "?"; } // Affichage simple
         },
+        {
+             title: "Téléphone", field: "telephone",
+             width: 130,
+             formatter: function(cell){ return cell.getValue() || "N/A"; }
+             // Optionnel : headerFilter: "input"
+         },
         { title: "Nom", field: "nom", minWidth: 120, headerFilter: "input" },
         {
              title: "Email", field: "email", // <-- Utiliser 'email' (commun dans forms) ou 'mail' si c'est ça dans Firestore
@@ -1835,7 +2393,8 @@ function initializeRechargeTable(initialData = [])  {
             width: 130,
             headerFilter: "input",
             formatter: function(cell) { return cell.getValue() || "N/A"; }
-        }
+        },
+        { title: "Détails", field: "commentaire", minWidth: 150, formatter: "textarea", headerTooltip:true },
     ];
 
     try {
@@ -2268,126 +2827,209 @@ function loadSyntheseData() {
 }
 
 // --- INITIALISATION ---
+
+
+
+
+
+
+
+
+// --- INITIALISATION PRINCIPALE (DOMContentLoaded) ---
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM prêt.");
+    console.log("DOM prêt. Mise en place de l'initialisation de base et de l'observateur d'authentification.");
 
-    // --- Attacher les listeners génériques (délégation) ---
-    contentSections.forEach(section => {
-        // Pour les actions sur les cartes (edit/delete) dans les grilles
-        const containerGrid = section.querySelector('.grid');
-        if (containerGrid) {
-            setupActionListeners(containerGrid);
-        }
-        // Pour les selects de statut (Demandes, Café Table)
-        const containerSelect = section.querySelector('select.contact-status, select.coffee-status');
-         // AJOUT : aussi pour le tableau tabulator pour les selects/boutons DANS le tableau
-         const containerTable = section.querySelector('#coffee-table-container, #recharge-table-container');
-        if (containerSelect || containerTable) {
-             // Attacher au conteneur de la section si un select ou une table existe
-            setupActionListeners(section);
-        }
-    });
+    // --- 1. Fonctions d'aide pour l'initialisation des listeners ---
+    // (Ces fonctions regroupent les attachements de listeners qui doivent être prêts immédiatement)
 
-
-    // --- SUPPRESSION DES ANCIENS Listeners spécifiques pour la section badges ---
-    /* Supprimer ce bloc, il est remplacé par setupBadgeEventListeners
-    const badgePage = document.getElementById('section-badges');
-    if (badgePage) {
-        document.getElementById('search-employee-btn')?.addEventListener('click', handleBadgeSearch); // <<< ANCIEN / A SUPPRIMER
-        document.getElementById('form-add-key')?.addEventListener('submit', handleBadgeAddKey); // <<< ANCIEN / A SUPPRIMER
-    }
-    */
-
-
-    // --- Listeners pour les boutons d'export CSV/PDF (Section Café Recharge) ---
-    const exportCsvBtn = document.getElementById('export-recharge-csv-btn');
-    const exportPdfBtn = document.getElementById('export-recharge-pdf-btn');
-
-    if (exportCsvBtn) {
-        exportCsvBtn.addEventListener('click', () => {
-            if (rechargeTable) {
-                try {
-                    const filename = "problemes_rechargement_cafe.csv";
-                    rechargeTable.download("csv", filename, { delimiter: ";" });
-                    console.log(`Export CSV demandé pour ${filename}`);
-                } catch (error) {
-                    console.error("Erreur lors de l'export CSV:", error);
-                    showNotification("Erreur lors de l'export CSV.", true);
+    /**
+     * Attache les listeners pour la fermeture des modales (bouton 'X' et clic extérieur).
+     */
+    function initializeModalListeners() {
+        console.log(" -> Initialisation des listeners de modales...");
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modalId = btn.getAttribute('data-modal');
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    modalElement.style.display = 'none';
+                    // La fonction resetModalForms est définie ailleurs dans le script
+                    resetModalForms(modalElement);
                 }
-            } else {
-                showNotification("Le tableau des rechargements n'est pas encore prêt.", true);
-            }
+            });
         });
+
+        window.onclick = function (event) {
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                     // La fonction resetModalForms est définie ailleurs dans le script
+                    resetModalForms(modal);
+                }
+            });
+        };
     }
 
-    if (exportPdfBtn) {
-        exportPdfBtn.addEventListener('click', () => {
-            if (rechargeTable) {
-                if (typeof jspdf === 'undefined') {
-                    console.error("La librairie jsPDF de base n'est pas chargée !");
-                    showNotification("Erreur : Librairie PDF manquante.", true);
-                    return;
-                }
-                try {
-                    const filename = "problemes_rechargement_cafe.pdf";
-                    const pdfOptions = { orientation: "landscape", title: "Problèmes de Rechargement Café (En Cours)" };
-                    rechargeTable.download("pdf", filename, pdfOptions);
-                    console.log(`Export PDF demandé pour ${filename}`);
-                } catch (error) {
-                    console.error("Erreur lors de l'export PDF:", error);
-                    showNotification("Erreur lors de l'export PDF.", true);
-                }
-            } else {
-                showNotification("Le tableau des rechargements n'est pas encore prêt.", true);
-            }
-        });
+    /**
+     * Attache les listeners aux éléments du menu de navigation principal.
+     * La logique détaillée de changement de section est dans la fonction appelée par le listener.
+     */
+    function initializeNavigationListeners() {
+        console.log(" -> Initialisation des listeners de navigation principale...");
+        // La logique de clic est maintenant encapsulée dans la définition de la fonction
+        // initializeNavigationListeners DANS la portée globale ou une section dédiée "NAVIGATION".
+        // Assurez-vous que la fonction qui contient la boucle menuItems.forEach(...)
+        // est bien définie et appelée ici si elle n'est pas globale.
+        // Si elle est globale, l'appel ici n'est pas nécessaire car elle est déjà définie.
+        // MAIS, si elle est définie comme une fonction locale, elle doit être appelée :
+        // Exemple :
+        // if (typeof setupMenuNavigation === 'function') { // Vérifie si la fonction existe
+        //     setupMenuNavigation(); // Appelle la fonction qui attache les listeners aux menuItems
+        // } else {
+        //     console.error("La fonction pour initialiser la navigation du menu est introuvable !");
+        // }
+        // --- Pour cet exemple, nous supposons que la fonction initializeNavigationListeners
+        // --- (contenant la boucle menuItems.forEach) est définie globalement ---
+        // (Si elle est définie ailleurs, décommentez et adaptez le bloc 'if' ci-dessus)
+
+        // ---> Appel Direct de la fonction qui boucle sur menuItems <---
+        // (Assurez-vous que cette fonction est bien définie globalement ou importée si modules)
+        if (typeof initializePrimaryNavigation === 'function') {
+             initializePrimaryNavigation(); // Nom suggéré pour la fonction qui boucle sur menuItems
+        } else {
+             console.warn("Fonction initializePrimaryNavigation non trouvée, en attente d'une définition globale ou d'une refactorisation.")
+             // Fallback: Recopier la boucle ici si elle n'est pas dans une fonction séparée
+             /*
+             menuItems.forEach(item => {
+                 item.addEventListener('click', handleMenuItemClick); // handleMenuItemClick serait la fonction contenant toute la logique de clic
+             });
+             */
+        }
+
+
     }
 
+    // --- 2. Attacher les Listeners Essentiels ---
 
-    // --- Charger TOUTES les données initiales depuis Firebase ---
-    console.log("Chargement des données Firebase...");
-    loadNewsFromFirebase();
-    loadMembersFromFirebase();
-    loadPartnersFromFirebase();
-    loadDemandesFromFirebase();
-    loadCalendarFromFirebase();
-    loadCoffeeReports(); // Charge les données café (qui seront utilisées par Synthèse aussi)
-    // loadSyntheseData() est appelé plus tard via initializeDefaultSection
-
-
-    // ====> MISE EN PLACE DES NOUVEAUX LISTENERS POUR LES BADGES <====
-    console.log("Configuration des écouteurs d'événements pour la section Badges...");
-    setupBadgeEventListeners(); // Appel essentiel pour la nouvelle logique
-
-
-    // ====> AJOUT : ENREGISTREMENT DU SERVICE WORKER <====
-    if ('serviceWorker' in navigator) {
-      console.log("Navigateur compatible Service Worker.");
-      // Utiliser l'événement 'load' pour ne pas bloquer le rendu initial
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js') // Chemin vers ton sw.js
-          .then(registration => {
-            console.log('Service Worker enregistré avec succès ! Scope:', registration.scope);
-          })
-          .catch(error => {
-            console.error('Échec de l\'enregistrement du Service Worker:', error);
-          });
-      });
+    // a) Boutons de Connexion / Déconnexion
+    console.log(" -> Attachement des listeners d'authentification...");
+    if (signInButton) {
+        signInButton.addEventListener('click', handleGoogleSignIn);
     } else {
-        console.log("Navigateur non compatible Service Worker.");
+        console.error("ERREUR: Bouton de connexion Google (#google-signin-btn) non trouvé !");
     }
-    // ====> FIN AJOUT <====
-    
-    // --- Activer la section par défaut au chargement ---
-    // Doit être appelé APRÈS que les listeners soient attachés et que les
-    // fonctions de chargement initiales soient lancées (même si les données
-    // arrivent plus tard via onSnapshot).
-    console.log("Activation de la section par défaut...");
-    initializeDefaultSection('synthese'); // Ou la section de ton choix
+    if (signOutButton) {
+        // Ce bouton est dans #app-container, mais le listener doit être prêt
+        signOutButton.addEventListener('click', handleSignOut);
+    } else {
+        // C'est normal si l'app n'est pas encore affichée, mais le bouton DOIT exister dans le HTML
+        console.warn("Bouton de déconnexion (#google-signout-btn) non trouvé au chargement. S'assurer qu'il existe dans #app-container.");
+    }
 
+    // b) Fermeture des Modales
+    initializeModalListeners();
 
-    console.log("Initialisation terminée.");
-    // NOTE IMPORTANTE: Les fonctions de l'ANCIEN système de badges
-    // (handleBadgeSearch, handleBadgeAddKey, searchEmployee, displayEmployee, addKeyToEmployee)
-    // doivent aussi être SUPPRIMÉES de ton fichier JS pour éviter toute confusion ou appel accidentel.
+    // c) Navigation Principale (Menu)
+    // Assurez-vous que la fonction initializeNavigationListeners ci-dessus
+    // appelle bien la fonction qui contient la boucle menuItems.forEach OU
+    // que cette boucle est directement appelée ici.
+    // (La fonction handleMenuItemClick qui contient la logique de navigation est définie ailleurs)
+    initializeNavigationListeners(); // Attache les listeners du menu
+
+    // --- 3. Démarrer l'Observateur d'Authentification ---
+    console.log(" -> Mise en place de l'observateur d'état d'authentification...");
+    // La fonction setupAuthObserver est définie ailleurs dans le script
+    setupAuthObserver();
+
+    // --- 4. État Initial de l'Interface ---
+    console.log(" -> Affichage de l'écran de connexion par défaut...");
+    // Afficher l'écran de login pendant que l'état d'auth est vérifié.
+    // L'observateur corrigera l'affichage si l'utilisateur est déjà connecté et autorisé.
+    showLoginScreen();
+
+    // --- Fin de l'initialisation de base ---
+    console.log("Initialisation de base terminée. Attente de l'état d'authentification pour charger les fonctionnalités de l'application...");
+
+    // Rappel : TOUTES les initialisations spécifiques à l'application (chargement des données,
+    // listeners de formulaires complexes, initialisation des tables/graphiques, etc.)
+    // sont maintenant déclenchées par la fonction `initializeAppFeatures()`
+    // qui est appelée SEULEMENT APRÈS une connexion réussie ET autorisée
+    // via l'observateur `onAuthStateChanged` dans `setupAuthObserver()`.
 });
+
+// --- Définition de la fonction d'initialisation de la navigation (exemple) ---
+// (Placez ceci avec les autres définitions de fonctions globales)
+/**
+ * Attache les écouteurs de clic aux éléments du menu principal.
+ */
+function initializePrimaryNavigation() { // Nom plus spécifique
+     menuItems.forEach(item => {
+        // 'handleMenuItemClick' est la fonction (définie ailleurs)
+        // qui contient TOUTE la logique complexe de changement de section,
+        // destruction/création d'éléments café, appel de loadSyntheseData, etc.
+         item.addEventListener('click', handleMenuItemClick); // Assurez-vous que handleMenuItemClick existe
+     });
+}
+
+/**
+ * Gère le clic sur un élément du menu principal.
+ * (C'est votre ancienne logique de la boucle forEach des menuItems)
+ */
+function handleMenuItemClick(event) {
+     // 'this' ou event.currentTarget fait référence à l'élément cliqué
+     const item = event.currentTarget;
+     const sectionId = item.getAttribute('data-section');
+     const newActiveSectionId = `section-${sectionId}`;
+
+     console.log(`Navigation MENU demandée: DE '${currentActiveSectionId}' VERS '${newActiveSectionId}'`);
+
+     // --- Logique de DESTRUCTION Café ---
+     if (currentActiveSectionId === 'section-coffee' && newActiveSectionId !== 'section-coffee') {
+         console.log("Quitting coffee section: Destroying tables and charts...");
+         // ... (code de destruction existant) ...
+         if (coffeeTable) try { coffeeTable.destroy(); coffeeTable = null; } catch(e){} finally { coffeeTable = null; }
+         if (rechargeTable) try { rechargeTable.destroy(); rechargeTable = null; } catch(e){} finally { rechargeTable = null; }
+         if (problemChartInstance) try { problemChartInstance.destroy(); } catch(e){} finally { problemChartInstance = null; }
+         if (machineChartInstance) try { machineChartInstance.destroy(); } catch(e){} finally { machineChartInstance = null; }
+         if (statusChartInstance) try { statusChartInstance.destroy(); } catch(e){} finally { statusChartInstance = null; }
+         console.log("Finished destroying coffee section elements.");
+     }
+
+     // --- Logique Principale de Navigation ---
+     currentActiveSectionId = newActiveSectionId;
+     menuItems.forEach(i => i.classList.remove('active'));
+     item.classList.add('active');
+     contentSections.forEach(sec => {
+         sec.classList.toggle('active', sec.id === newActiveSectionId);
+     });
+
+     // --- Actions Spécifiques ---
+     if (sectionId === 'synthese') {
+         // La fonction loadSyntheseData est définie ailleurs
+         loadSyntheseData();
+     }
+     if (sectionId === 'coffee') {
+         // Initialiser via setTimeout (code existant)
+          setTimeout(() => {
+              if (!coffeeTable) initializeCoffeeTable();
+              if (!rechargeTable) {
+                  const filteredData = coffeeData.filter(/* ... logique de filtre ... */);
+                  initializeRechargeTable(filteredData);
+              }
+              updateCoffeeStatsAndCharts(coffeeData);
+          }, 50);
+     }
+
+     // --- Rotation ---
+     const activeSectionElement = appContainer.querySelector('.content.active');
+     if (activeSectionElement) {
+         // La fonction applyRandomRotation est définie ailleurs
+         if (sectionId !== 'coffee') {
+             applyRandomRotation(`#${activeSectionElement.id} .grid-item:not(.add-item)`);
+         }
+         if (sectionId === 'synthese') {
+             applyRandomRotation(`#${activeSectionElement.id} .synth-card`);
+         }
+     }
+     console.log("--- Fin du traitement du clic menu ---");
+}
