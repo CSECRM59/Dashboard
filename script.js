@@ -3099,4 +3099,44 @@ function handleMenuItemClick(event) {
          }
      }
      console.log("--- Fin du traitement du clic menu ---");
+// Récupère le bouton (fais-le une seule fois, idéalement avec les autres const globales)
+const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+
+// Seuil en pixels après lequel le bouton apparaît
+const scrollThreshold = 150;
+
+// Fonction pour afficher/cacher le bouton
+function toggleScrollTopButton() {
+  if (!scrollToTopBtn) return; // Sécurité si le bouton n'existe pas
+
+  if (document.body.scrollTop > scrollThreshold || document.documentElement.scrollTop > scrollThreshold) {
+    // Utilise display block/none (simple)
+    scrollToTopBtn.style.display = "block";
+
+    // Ou utilise opacity/visibility pour l'effet de fondu (avec le CSS commenté)
+    // scrollToTopBtn.classList.add("visible");
+
+  } else {
+    // Utilise display block/none
+    scrollToTopBtn.style.display = "none";
+
+    // Ou utilise opacity/visibility pour l'effet de fondu
+    // scrollToTopBtn.classList.remove("visible");
+  }
+}
+
+// Fonction pour remonter en haut de page
+function scrollToTop() {
+  window.scrollTo({top: 0, behavior: 'smooth'}); // Défilement fluide
+}
+
+// Écouteur pour le scroll de la page
+window.addEventListener('scroll', toggleScrollTopButton);
+
+// Écouteur pour le clic sur le bouton
+if (scrollToTopBtn) {
+  scrollToTopBtn.addEventListener('click', scrollToTop);
+} else {
+    console.warn("Le bouton scrollToTopBtn n'a pas été trouvé.");
+}
 }
