@@ -954,3 +954,45 @@ form button[type="submit"] {
    .synth-card::after { display: none;} /* Cache épingle */
   #synth-chart-container { max-width: 95%; }
 }
+/* --- BOUTON SCROLL TO TOP --- */
+#scrollToTopBtn {
+  display: none; /* Caché par défaut */
+  position: fixed; /* Position fixe par rapport à la fenêtre */
+  bottom: 25px; /* Distance du bas */
+  right: 25px; /* Distance de la droite */
+  z-index: 99; /* Pour s'assurer qu'il est au-dessus des autres éléments */
+  border: none; /* Pas de bordure */
+  outline: none; /* Pas de contour au focus */
+  background-color: var(--accent-couleur-1); /* Couleur du thème */
+  color: white; /* Couleur de l'icône */
+  cursor: pointer; /* Curseur main */
+  padding: 12px 15px; /* Espacement intérieur */
+  border-radius: 50%; /* Pour un bouton rond */
+  font-size: 18px; /* Taille de l'icône */
+  box-shadow: var(--ombre-moyenne); /* Ombre portée */
+  transition: background-color var(--transition-rapide), opacity 0.3s ease, visibility 0.3s ease; /* Transitions douces */
+
+  /* Optionnel: Utiliser opacity/visibility pour un fade-in/out au lieu de display:none/block */
+  /* opacity: 0; */
+  /* visibility: hidden; */
+}
+
+#scrollToTopBtn:hover {
+  background-color: var(--accent-couleur-2); /* Change de couleur au survol */
+}
+
+/* Optionnel: Classe pour l'effet fade-in/out si tu utilises opacity/visibility */
+/* #scrollToTopBtn.visible {
+  opacity: 1;
+  visibility: visible;
+} */
+
+/* Ajustement pour petits écrans si besoin */
+@media (max-width: 768px) {
+    #scrollToTopBtn {
+        bottom: 15px;
+        right: 15px;
+        padding: 10px 13px;
+        font-size: 16px;
+    }
+}
