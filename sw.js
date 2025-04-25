@@ -1,6 +1,6 @@
 // sw.js - Service Worker Minimaliste pour PWA Installable
 
-const CACHE_NAME = 'atelier-cse-cache-v1'; // Nom de ton cache (change la version si tu modifies les fichiers)
+const CACHE_NAME = 'atelier-cse-cache-v2'; // Nom de ton cache (change la version si tu modifies les fichiers)
 const URLS_TO_CACHE = [
   '.', // La page d'accueil (index.html)
   'index.html',
