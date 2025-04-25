@@ -330,10 +330,31 @@ function initializeAppFeatures() {
         });
      }
 
-    if (formEditActus) {
+        if (formEditActus) {
         formEditActus.addEventListener('submit', e => {
             e.preventDefault();
+            // Ligne existante:
             const id = e.target['edit-news-id'].value;
+
+            // === AJOUT DES LOGS DE DÉBOGAGE ===
+            console.log("--- SUBMIT EDIT NEWS ---");
+            console.log("Formulaire soumis :", e.target); // Vérifie que c'est le bon formulaire
+            const idInput = e.target['edit-news-id']; // Récupère l'élément input lui-même
+            console.log("Élément Input ID trouvé :", idInput);
+            console.log(">>> VALEUR DE L'ID LU AU MOMENT DU SUBMIT :", id); // <<< LE LOG LE PLUS IMPORTANT
+
+            // Vérification explicite si l'ID est vide
+            if (!id || id.trim() === '') {
+                console.error("ERREUR FATALE : L'ID est vide au moment de la soumission ! Impossible de mettre à jour.");
+                showNotification("Erreur : L'identifiant de l'actualité est manquant.", true);
+                // Optionnel : Garder le bouton désactivé si besoin
+                const submitButton = document.getElementById('submit-edit-news');
+                 if(submitButton) submitButton.disabled = true; // Assure qu'il reste bloqué
+                return; // Arrête l'exécution ici pour éviter l'erreur Firestore
+            }
+            // === FIN DES LOGS DE DÉBOGAGE ===
+
+
             const newImageUrl = document.getElementById('edit-news-image-url').value;
             const originalImageUrl = document.getElementById('edit-news-original-image-url').value;
             const finalImageUrl = newImageUrl ? newImageUrl : originalImageUrl;
@@ -347,26 +368,24 @@ function initializeAppFeatures() {
             };
             const submitButton = document.getElementById('submit-edit-news');
             if(submitButton) submitButton.disabled = true;
+
+            console.log(`Tentative de mise à jour Firestore avec ID : '${id}'`); // Log juste avant l'appel DB
+
             db.collection('news').doc(id).update(data).then(() => {
                 showNotification('Actualité modifiée!');
-                 resetModalForms(formEditActus.closest('.modal')); // Reset via fonction centralisée
+                 // La ligne suivante pourrait encore causer problème si elle déclenche un reset trop tôt
+                 // resetModalForms(formEditActus.closest('.modal'));
                 document.getElementById('modal-edit-actualite').style.display = 'none';
+                 // On réinitialise via le listener de fermeture standard qui est déjà en place
             }).catch(err => {
                 console.error("Erreur modification actualité:", err);
+                 console.error("ID utilisé lors de l'erreur:", id); // Log l'ID si erreur
                 showNotification('Erreur modif', true);
             }).finally(() => {
                  if(submitButton) submitButton.disabled = false;
             });
         });
     }
-     if (newsImageInputEdit) {
-         newsImageInputEdit.addEventListener('change', (event) => {
-             const file = event.target.files[0];
-             if (file) {
-                 uploadToImgur(file, 'edit-news-upload-status', 'edit-news-image-url', 'submit-edit-news');
-             }
-         });
-     }
 
 
     // MEMBRES
@@ -566,8 +585,25 @@ const closeButtons = document.querySelectorAll('.close');
 
 function resetModalForms(modalElement) {
     const forms = modalElement.querySelectorAll('form');
-    forms.forEach(form => form.reset());
-
+    //forms.forEach(form => form.reset());
+forms.forEach(form => {
+    // Sélectionne tous les inputs, textareas, selects VISIBLES ou pertinents pour l'utilisateur
+    const fieldsToReset = form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select');
+    fieldsToReset.forEach(field => {
+        if (field.type === 'checkbox' || field.type === 'radio') {
+            field.checked = false; // Ou mettre à la valeur par défaut si nécessaire
+        } else {
+            field.value = ''; // Vide les champs texte, textarea, etc.
+        }
+    });
+    // Pour les selects, tu pourrais vouloir remettre à la première option ou une option vide
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => {
+        if (select.options.length > 0) {
+            select.selectedIndex = 0; // Remet à la première option
+        }
+    });
+});
     // Reset spécifiques aux uploads d'images Actualités
     const newsStatus = modalElement.querySelector('#news-upload-status, #edit-news-upload-status');
     const newsUrlHidden = modalElement.querySelector('#news-image-url, #edit-news-image-url');
@@ -1086,7 +1122,7 @@ function deleteNews(id) { if (!confirm("Effacer cette actu ?")) return; db.colle
 
 // Form Listeners Actus
 
-document.getElementById('form-actualites').addEventListener('submit', e => {
+/*document.getElementById('form-actualites').addEventListener('submit', e => {
     e.preventDefault();
     const imageUrl = document.getElementById('news-image-url').value; // <-- Lire l'URL depuis l'input caché
 
@@ -1119,7 +1155,7 @@ document.getElementById('form-actualites').addEventListener('submit', e => {
     });
 });
 
-document.getElementById('form-edit-actualite').addEventListener('submit', e => {
+/*document.getElementById('form-edit-actualite').addEventListener('submit', e => {
     e.preventDefault();
     const id = e.target['edit-news-id'].value;
     const newImageUrl = document.getElementById('edit-news-image-url').value; // URL si NOUVEL upload
@@ -1153,7 +1189,7 @@ document.getElementById('form-edit-actualite').addEventListener('submit', e => {
     }).finally(() => {
          if(submitButton) submitButton.disabled = false; // Réactiver
     });
-});
+});*/
 
 // === MODULE MEMBRES ===
 function loadMembersFromFirebase() {
@@ -1206,8 +1242,9 @@ function updateMembersList() {
 function openEditMemberModal(id) { const member = membersData.find(m => m.id === id); if (!member) return; document.getElementById('edit-member-id').value=id; /* ... Remplir form edit ... */ document.getElementById('edit-member-nom').value = member.Nom; document.getElementById('edit-member-prenom').value = member.Prenom; document.getElementById('edit-member-mail').value = member.Mail; document.getElementById('edit-member-operation').value = member.Operation; document.getElementById('edit-member-role').value = member.Role; document.getElementById('edit-member-photo').value = member.PhotoURL || ''; document.getElementById('modal-edit-membre').style.display = 'block'; }
 function deleteMember(id) { if (!confirm("Retirer ce membre ?")) return; db.collection('membres').doc(id).delete().then(()=>showNotification("Membre retiré.")).catch(err=>{console.error(err); showNotification("Erreur retrait membre", true); }); }
 // Form Listeners Membres
-document.getElementById('form-membres').addEventListener('submit', e => { e.preventDefault(); const data={Nom:e.target['member-nom'].value, Prenom:e.target['member-prenom'].value, Mail:e.target['member-mail'].value, Operation:e.target['member-operation'].value, Role:e.target['member-role'].value, PhotoURL:e.target['member-photo'].value}; db.collection('membres').add(data).then(()=>{ showNotification('Membre ajouté!'); e.target.reset(); document.getElementById('modal-membres').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur ajout', true);}); });
-document.getElementById('form-edit-membre').addEventListener('submit', e => { e.preventDefault(); const id=e.target['edit-member-id'].value; const data={Nom:e.target['edit-member-nom'].value, Prenom:e.target['edit-member-prenom'].value, Mail:e.target['edit-member-mail'].value, Operation:e.target['edit-member-operation'].value, Role:e.target['edit-member-role'].value, PhotoURL:e.target['edit-member-photo'].value}; db.collection('membres').doc(id).update(data).then(()=>{ showNotification('Membre modifié!'); document.getElementById('modal-edit-membre').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur modif', true);}); });
+
+/*document.getElementById('form-membres').addEventListener('submit', e => { e.preventDefault(); const data={Nom:e.target['member-nom'].value, Prenom:e.target['member-prenom'].value, Mail:e.target['member-mail'].value, Operation:e.target['member-operation'].value, Role:e.target['member-role'].value, PhotoURL:e.target['member-photo'].value}; db.collection('membres').add(data).then(()=>{ showNotification('Membre ajouté!'); e.target.reset(); document.getElementById('modal-membres').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur ajout', true);}); });
+document.getElementById('form-edit-membre').addEventListener('submit', e => { e.preventDefault(); const id=e.target['edit-member-id'].value; const data={Nom:e.target['edit-member-nom'].value, Prenom:e.target['edit-member-prenom'].value, Mail:e.target['edit-member-mail'].value, Operation:e.target['edit-member-operation'].value, Role:e.target['edit-member-role'].value, PhotoURL:e.target['edit-member-photo'].value}; db.collection('membres').doc(id).update(data).then(()=>{ showNotification('Membre modifié!'); document.getElementById('modal-edit-membre').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur modif', true);}); });*/
 
 
 // === MODULE PARTENAIRES ===
@@ -1251,8 +1288,8 @@ function updatePartnersList() {
 function openEditPartnerModal(id) { const partner=partnersData.find(p=>p.id===id); if(!partner) return; /*... Remplir form ... */ document.getElementById('edit-partenaire-id').value=id; document.getElementById('edit-partenaire-categorie').value=partner.Categorie; document.getElementById('edit-partenaire-nom').value=partner.Nom; document.getElementById('edit-partenaire-description').value=partner.Description; document.getElementById('edit-partenaire-lien').value=partner.Lien; document.getElementById('edit-partenaire-logo').value=partner.Logo||''; document.getElementById('modal-edit-partenaire').style.display = 'block';}
 function deletePartner(id) { if (!confirm("Effacer ce partenaire ?")) return; db.collection('partenaires').doc(id).delete().then(()=>showNotification("Partenaire effacé.")).catch(err=>{console.error(err); showNotification("Erreur suppression", true);}); }
 // Form Listeners Partenaires
-document.getElementById('form-partenaires').addEventListener('submit', e => { e.preventDefault(); const data={Categorie:e.target['partenaire-categorie'].value, Nom:e.target['partenaire-nom'].value, Description:e.target['partenaire-description'].value, Lien:e.target['partenaire-lien'].value, Logo:e.target['partenaire-logo'].value}; db.collection('partenaires').add(data).then(()=>{ showNotification('Partenaire ajouté!'); e.target.reset(); document.getElementById('modal-partenaires').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur ajout', true);}); });
-document.getElementById('form-edit-partenaire').addEventListener('submit', e => { e.preventDefault(); const id=e.target['edit-partenaire-id'].value; const data={Categorie:e.target['edit-partenaire-categorie'].value, Nom:e.target['edit-partenaire-nom'].value, Description:e.target['edit-partenaire-description'].value, Lien:e.target['edit-partenaire-lien'].value, Logo:e.target['edit-partenaire-logo'].value}; db.collection('partenaires').doc(id).update(data).then(()=>{ showNotification('Partenaire modifié!'); document.getElementById('modal-edit-partenaire').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur modif', true);}); });
+/*document.getElementById('form-partenaires').addEventListener('submit', e => { e.preventDefault(); const data={Categorie:e.target['partenaire-categorie'].value, Nom:e.target['partenaire-nom'].value, Description:e.target['partenaire-description'].value, Lien:e.target['partenaire-lien'].value, Logo:e.target['partenaire-logo'].value}; db.collection('partenaires').add(data).then(()=>{ showNotification('Partenaire ajouté!'); e.target.reset(); document.getElementById('modal-partenaires').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur ajout', true);}); });
+document.getElementById('form-edit-partenaire').addEventListener('submit', e => { e.preventDefault(); const id=e.target['edit-partenaire-id'].value; const data={Categorie:e.target['edit-partenaire-categorie'].value, Nom:e.target['edit-partenaire-nom'].value, Description:e.target['edit-partenaire-description'].value, Lien:e.target['edit-partenaire-lien'].value, Logo:e.target['edit-partenaire-logo'].value}; db.collection('partenaires').doc(id).update(data).then(()=>{ showNotification('Partenaire modifié!'); document.getElementById('modal-edit-partenaire').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur modif', true);}); });*/
 
 
 // === MODULE DEMANDES ===
@@ -1344,7 +1381,7 @@ function openEditCalendarModal(id) { const event = calendarData.find(e => e.id =
 function deleteCalendarEvent(id) { if (!confirm("Effacer cet événement ?")) return; db.collection('calendrier').doc(id).delete().then(()=>showNotification("Événement effacé.")).catch(err=>{console.error(err); showNotification("Erreur suppression", true);}); }
 // Form Listeners Calendrier
 document.getElementById('form-calendrier').addEventListener('submit', e => { e.preventDefault(); const data={title:e.target['event-title'].value, description:e.target['event-description'].value, date:e.target['event-date'].value, time:e.target['event-time'].value, endDate:e.target['event-end-date'].value, endTime:e.target['event-end-time'].value}; db.collection('calendrier').add(data).then(()=>{ showNotification('Événement ajouté!'); e.target.reset(); document.getElementById('modal-calendrier').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur ajout', true);}); });
-document.getElementById('form-edit-calendrier').addEventListener('submit', e => { e.preventDefault(); const id=e.target['edit-event-id'].value; const data={title:e.target['edit-event-title'].value, description:e.target['edit-event-description'].value, date:e.target['edit-event-date'].value, time:e.target['edit-event-time'].value, endDate:e.target['edit-event-end-date'].value, endTime:e.target['edit-event-end-time'].value}; db.collection('calendrier').doc(id).update(data).then(()=>{ showNotification('Événement modifié!'); document.getElementById('modal-edit-calendrier').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur modif', true);}); });
+/*document.getElementById('form-edit-calendrier').addEventListener('submit', e => { e.preventDefault(); const id=e.target['edit-event-id'].value; const data={title:e.target['edit-event-title'].value, description:e.target['edit-event-description'].value, date:e.target['edit-event-date'].value, time:e.target['edit-event-time'].value, endDate:e.target['edit-event-end-date'].value, endTime:e.target['edit-event-end-time'].value}; db.collection('calendrier').doc(id).update(data).then(()=>{ showNotification('Événement modifié!'); document.getElementById('modal-edit-calendrier').style.display = 'none'; }).catch(err=>{ console.error(err); showNotification('Erreur modif', true);}); });*/
 
 
 // === MODULE BADGES CAFÉ (Version Dynamique) ===
@@ -1496,45 +1533,74 @@ async function searchEmployeesByName(searchTerm) {
 }
 
 // Fonction appelée lors de la sélection d'un salarié dans les résultats
+// Fonction appelée lors de la sélection d'un salarié dans les résultats
 function selectEmployee(id, data) {
-    console.log("Salarié sélectionné:", id, data);
-    // Masquer recherche et prompt nouveau
-     // showBadgeUISection('selected-employee-zone'); // On l'affichera une fois les infos mises à jour
+    console.log("Salarié sélectionné (ancienne structure):", id, data);
 
     const detailsP = document.getElementById('selected-employee-details');
-     const prenom = data.Prenom || data['Prénom'] || '?';
+    // Utilise 'Prénom' car c'est ce qu'il y a dans tes données
+    const prenom = data['Prénom'] || '?';
     detailsP.innerHTML = `<strong>Nom :</strong> ${data.Nom || '?'} <br> <strong>Prénom :</strong> ${prenom}`;
 
-     // Mettre à jour la liste des badges existants
-     updateDisplayedBadges(data.keys || []); // Passe un tableau vide si keys n'existe pas
+    // --- PRÉPARATION BADGE À PARTIR DE L'ANCIENNE STRUCTURE ---
+    let badgesToDisplay = [];
+    const numCle = data["Num de Clé"]; // Lire le champ exact
 
-    // Pré-remplir les champs cachés du formulaire d'assignation
+    if (numCle) { // Si un numéro de clé existe
+        console.log("Ancienne structure trouvée avec Num de Clé:", numCle);
+        // Fonction helper pour convertir l'ancienne date (optionnel mais recommandé)
+        const convertOldDate = (oldDateStr) => {
+            if (!oldDateStr || typeof oldDateStr !== 'string' || !oldDateStr.includes('/')) return null;
+            const parts = oldDateStr.split('/');
+            if (parts.length === 3) {
+                // Assure-toi que l'ordre est bon (JJ/MM/AAAA) -> AAAA-MM-JJ
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return null;
+        };
+
+        const badgeObject = {
+            keyNumber: numCle, // Utilise la valeur de "Num de Clé"
+            type: data["E (echange) R (reglement)"] || '?', // Lire le champ exact du type
+            // Pour le montant, on se base sur le type (le champ "Montant réglé" est vide)
+            montant: (data["E (echange) R (reglement)"] === 'R' ? 7 : 0),
+            date: convertOldDate(data.Date) // Lire le champ Date et essayer de convertir
+        };
+        badgesToDisplay = [badgeObject]; // Met l'objet unique dans un tableau
+    } else {
+        console.log("Aucun 'Num de Clé' trouvé pour ce salarié.");
+    }
+    // --- FIN PRÉPARATION ---
+
+    // Mettre à jour l'affichage
+    updateDisplayedBadges(badgesToDisplay); // Fonctionne car on lui passe un tableau formaté
+
+    // Pré-remplir les champs cachés (reste pareil)
     document.getElementById('selected-employee-id').value = id;
     document.getElementById('selected-employee-nom').value = data.Nom || '?';
-    document.getElementById('selected-employee-prenom').value = prenom;
+    document.getElementById('selected-employee-prenom').value = prenom; // Utilise la variable prenom définie plus haut
 
+    // Réinitialiser formulaire d'assignation (reste pareil)
+    const assignForm = document.getElementById('form-assign-badge');
+    if (assignForm) assignForm.reset();
+    document.getElementById('caution-amount-group').style.display = 'none';
+    document.getElementById('badge-number').value = '';
 
-     // Réinitialiser et préparer le formulaire d'assignation
-     const assignForm = document.getElementById('form-assign-badge');
-     if(assignForm) assignForm.reset();
-     document.getElementById('caution-amount-group').style.display = 'none'; // Cacher montant
-     document.getElementById('badge-number').value = ''; // Assure que le champ est vide
+    // Afficher zone sélectionnée (reste pareil)
+    showBadgeUISection('selected-employee-zone');
 
-
-     // Afficher la zone du salarié sélectionné
-     showBadgeUISection('selected-employee-zone');
-
+    // Gérer bouton supprimer (reste pareil)
     const deleteButton = document.getElementById('delete-employee-btn');
     if (deleteButton) {
-        deleteButton.style.display = 'inline-block'; // Afficher le bouton quand un user est sélectionné
-         deleteButton.disabled = false; // S'assurer qu'il est actif
+        deleteButton.style.display = 'inline-block';
+        deleteButton.disabled = false;
     }
-    
-     // Effacer la zone de recherche et les résultats précédents
-     const searchInput = document.getElementById('employee-search');
-     const resultsContainer = document.getElementById('search-results');
-     if(searchInput) searchInput.value = ''; // Vide le champ de recherche
-     if(resultsContainer) resultsContainer.innerHTML = ''; // Vide les résultats
+
+    // Effacer recherche (reste pareil)
+    const searchInput = document.getElementById('employee-search');
+    const resultsContainer = document.getElementById('search-results');
+    if (searchInput) searchInput.value = '';
+    if (resultsContainer) resultsContainer.innerHTML = '';
 }
 
 // Met à jour la liste UL des badges affichés
@@ -1912,6 +1978,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fonction pour calculer et afficher les stats et graphiques
 function updateCoffeeStatsAndCharts(data) {
     console.log("Mise à jour des stats et graphiques Café...");
+    const statsContainer = document.getElementById('coffee-analytics-area');
     if (!data || data.length === 0) {
         console.log("Aucune donnée café pour les statistiques.");
         // Optionnel : Mettre à zéro ou afficher un message dans les zones de stats/charts
