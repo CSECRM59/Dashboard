@@ -2348,7 +2348,7 @@ function initializeCoffeeTable() {
    if (v==='traité'){ color='#677BC4'; text='Traité'; icon='fa-check-circle'; }
    return `<span style="color:${color};font-weight:bold">
             <i class="fas ${icon}" style="margin-right:4px"></i>${text}</span>`;
-}
+},
             cellEdited: function(cell) { // Callback mise à jour statut
                  const id = cell.getRow().getData().id;
                  const newStatus = cell.getValue();
