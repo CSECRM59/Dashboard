@@ -1997,7 +1997,7 @@ function updateCoffeeStatsAndCharts(data) {
     const totalReports = data.length;
     const problemCounts = {};
     const machineCounts = {};
-    const statusCounts = { 'en cours': 0, 'traité': 0 };
+    const statusCounts = { 'en cours': 0, 'envoyé au sav': 0, 'traité': 0 };
 
     data.forEach(report => {
         // Compter les problèmes
@@ -2027,7 +2027,8 @@ function updateCoffeeStatsAndCharts(data) {
 
     // Mise à jour des stats simples
     document.getElementById('stat-total-reports').textContent = totalReports;
-    document.getElementById('stat-reports-en-cours').textContent = statusCounts['en cours'] || 0;
+    document.getElementById('stat-reports-en-cours').textContent =
+        (statusCounts['en cours'] + statusCounts['envoyé au sav']);
     document.getElementById('stat-reports-traite').textContent = statusCounts['traité'] || 0;
 
     // --- Préparation données pour les graphiques ---
@@ -2189,8 +2190,12 @@ function updateCoffeeStatsAndCharts(data) {
     } else { console.error("Canvas #machine-chart introuvable"); }
 
     // 3. Graphique Statuts (Camembert)
-    const statusLabels = Object.keys(statusCounts);
-    const statusDataValues = Object.values(statusCounts);
+    const statusLabels      = ['En cours', 'Envoyé SAV', 'Traité'];
+const statusDataValues  = [
+        statusCounts['en cours'],
+        statusCounts['envoyé au sav'],
+        statusCounts['traité']
+];
     // Couleurs spécifiques pour le statut
     const statusColors = [
         statusLabels.includes('en cours') ? 'rgba(255, 159, 64, 0.7)' : null, // Orange pour 'en cours'
@@ -2323,18 +2328,27 @@ function initializeCoffeeTable() {
         {
             title: "Statut", field: "status", width: 120, hozAlign: "center",
             // Filtre simple (list est ok, mais on peut revenir à select si doute)
-            headerFilter: "select", headerFilterParams: {values: {"": "Tous", "en cours": "En cours", "traité": "Traité"}},
+            headerFilter: "select", headerFilterParams : { values : {
+    "": "Tous",
+    "en cours": "En cours",
+    "envoyé au sav": "Envoyé SAV",
+    "traité": "Traité"
+}},
             // Éditeur 'select' qui fonctionnait
             editor: "select",
-            editorParams: { values: { "en cours": "En cours", "traité": "Traité" } },
-            formatter: function(cell) { // Formateur visuel (ne devrait pas poser problème)
-                 const value = cell.getValue() || "en cours";
-                const isTraite = value === 'traité';
-                const color = isTraite ? 'var(--accent-couleur-1)' : 'var(--accent-couleur-2)';
-                const text = isTraite ? 'Traité' : 'En cours';
-                const icon = isTraite ? 'fa-check-circle' : 'fa-exclamation-circle';
-                return `<span style="color: ${color}; font-weight: bold;"><i class="fas ${icon}" style="margin-right: 5px;"></i>${text}</span>`;
-            },
+            editorParams : { values: {
+    "en cours": "En cours",
+    "envoyé au sav": "Envoyé SAV",
+    "traité": "Traité"
+}},
+            formatter(cell){
+   const v = (cell.getValue() || 'en cours').toLowerCase();
+   let color = '#ffb347', text='En cours', icon='fa-exclamation-circle';
+   if (v==='envoyé au sav'){ color='#f39c12'; text='SAV'; icon='fa-paper-plane'; }
+   if (v==='traité'){ color='#677BC4'; text='Traité'; icon='fa-check-circle'; }
+   return `<span style="color:${color};font-weight:bold">
+            <i class="fas ${icon}" style="margin-right:4px"></i>${text}</span>`;
+}
             cellEdited: function(cell) { // Callback mise à jour statut
                  const id = cell.getRow().getData().id;
                  const newStatus = cell.getValue();
@@ -2514,8 +2528,10 @@ const rechargeReports = coffeeData.filter(report => {
     // Prend la valeur du champ 'status', lui donne 'en cours' par défaut si null/undefined,
     // le met en minuscule, et enlève les espaces avant/après.
     const currentStatus = (report.status || 'en cours').toLowerCase().trim();
-    // Considère comme 'en cours' si le résultat est 'en cours' ou une chaîne vide.
-    const statusIsInProgress = currentStatus === 'en cours' || currentStatus === '';
+const statusIsInProgress =
+       currentStatus === 'en cours' ||
+       currentStatus === 'envoyé au sav' ||
+       currentStatus === '';
 
     // 2. Vérification du Problème (Mots-clés)
     const problemeText = report.probleme || '';
