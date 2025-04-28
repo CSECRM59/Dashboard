@@ -2197,11 +2197,10 @@ const statusDataValues  = [
         statusCounts['traité']
 ];
     // Couleurs spécifiques pour le statut
-    const statusColors = [
-        statusLabels.includes('en cours') ? 'rgba(255, 159, 64, 0.7)' : null, // Orange pour 'en cours'
-        statusLabels.includes('traité') ? 'rgba(75, 192, 192, 0.7)' : null,    // Vert/Cyan pour 'traité'
-        // Ajouter d'autres couleurs si d'autres statuts apparaissent
-    ].filter(c => c !== null); // Filtre les couleurs nulles
+    const statusColors = ['#677BC4',   // En cours  (bleu-violet)
+                      '#f39c12',   // Envoyé SAV (orange)
+                      '#81c784'];  // Traité    (vert)    ]
+  .filter(c => c !== null); // Filtre les couleurs nulles
     const statusBorderColors = statusColors.map(color => color.replace('0.7', '1'));
 
     const statusCtx = document.getElementById('status-chart')?.getContext('2d');
@@ -2248,8 +2247,8 @@ const statusDataValues  = [
                     datasets: [{
                         data: statusDataValues,
                         backgroundColor: statusColors,
-                        borderColor: statusBorderColors,
-                        borderWidth: 1
+                        borderColor: '#ffffff',
+                        borderWidth: 2
                     }]
                 },
                 options: {
