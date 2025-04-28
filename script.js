@@ -2190,18 +2190,19 @@ function updateCoffeeStatsAndCharts(data) {
     } else { console.error("Canvas #machine-chart introuvable"); }
 
     // 3. Graphique Statuts (Camembert)
-    const statusLabels      = ['En cours', 'Envoyé SAV', 'Traité'];
-const statusDataValues  = [
-        statusCounts['en cours'],
-        statusCounts['envoyé au sav'],
-        statusCounts['traité']
+    const statusLabels     = ['En cours', 'Envoyé SAV', 'Traité'];
+const statusDataValues = [
+  statusCounts['en cours'],
+  statusCounts['envoyé au sav'],
+  statusCounts['traité']
 ];
-    // Couleurs spécifiques pour le statut
-    const statusColors = ['#677BC4',   // En cours  (bleu-violet)
-                      '#f39c12',   // Envoyé SAV (orange)
-                      '#81c784'];  // Traité    (vert)
-  .filter(c => c !== null); // Filtre les couleurs nulles
-    const statusBorderColors = statusColors.map(color => color.replace('0.7', '1'));
+
+// Couleurs (même longueur que les tableaux ci-dessus !)
+const statusColors = ['#677BC4',   // En cours
+                      '#f39c12',   // Envoyé SAV
+                      '#81c784'];  // Traité
+
+const statusBorderColors = statusColors.map(c => c);  // même couleurs ou autre
 
     const statusCtx = document.getElementById('status-chart')?.getContext('2d');
     if (statusCtx) {
