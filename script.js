@@ -2199,7 +2199,7 @@ const statusDataValues  = [
     // Couleurs spécifiques pour le statut
     const statusColors = ['#677BC4',   // En cours  (bleu-violet)
                       '#f39c12',   // Envoyé SAV (orange)
-                      '#81c784'];  // Traité    (vert)    ]
+                      '#81c784'];  // Traité    (vert)
   .filter(c => c !== null); // Filtre les couleurs nulles
     const statusBorderColors = statusColors.map(color => color.replace('0.7', '1'));
 
