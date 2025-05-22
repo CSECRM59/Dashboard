@@ -23,7 +23,8 @@
   --accent-couleur-1: #677BC4; /* Bleu-violet doux pour liens/boutons */
   --accent-couleur-2: #ffb347; /* Orange doux */
   --danger-couleur: #e57373; /* Rouge doux */
-
+  --postit-exposant-planning: #d1fae5; /* Exemple de vert pastel pour le planning */
+  --border-exposant-planning: #a7f3d0; /* Bordure assortie */
   /* Typographie */
   --font-corps: 'Roboto', sans-serif;
   --font-titre-principal: 'Kalam', cursive;
@@ -46,6 +47,7 @@ body {
   background-image: url('img/paper.png'); */
   color: var(--encre-texte);
   line-height: 1.6;
+  padding-bottom: 60px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -834,6 +836,101 @@ form button[type="submit"] {
     transform: scale(1.1); /* Effet de survol */
 }
 
+/* styles.css */
+/* ... (styles existants) ... */
+
+.calendar-grid-style {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  border: 1px solid var(--bordure-crayon);
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 4px;
+}
+.calendar-grid-style .calendar-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 0;
+  font-family: var(--font-titre-secondaire);
+  color: var(--encre-secondaire);
+  font-size: 0.9em;
+}
+.calendar-grid-style .calendar-day {
+  border: 1px solid #eee;
+  min-height: 80px;
+  padding: 5px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background-color var(--transition-rapide);
+  position: relative; /* Pour les indicateurs */
+}
+.calendar-grid-style .calendar-day:hover {
+  background-color: #f9f9f9;
+}
+.calendar-grid-style .calendar-day.not-current-month {
+  color: #ccc;
+  background-color: #fdfdfd;
+  cursor: default;
+}
+.calendar-grid-style .calendar-day.today {
+  background-color: var(--postit-jaune);
+  font-weight: bold;
+}
+.calendar-grid-style .day-number {
+  font-weight: bold;
+  margin-bottom: 3px;
+  display: block;
+}
+.calendar-grid-style .exposant-indicator { /* Indicateur pour les jours avec exposants */
+  display: block;
+  font-size: 0.7em;
+  color: var(--accent-couleur-1);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calendar-grid-style .exposant-indicator i {
+    margin-right: 3px;
+}
+
+#planned-exposants-list .planned-item {
+    padding: 8px;
+    border-bottom: 1px dotted #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#planned-exposants-list .planned-item:last-child {
+    border-bottom: none;
+}
+#planned-exposants-list .btn-delete-planning {
+    background: none;
+    border: none;
+    color: var(--danger-couleur);
+    cursor: pointer;
+    font-size: 0.9em;
+}
+#app-footer {
+  position: fixed; /* Positionne par rapport à la fenêtre du navigateur */
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: var(--papier-bg); /* Ou une autre couleur de fond discrète */
+  border-top: 1px solid var(--bordure-crayon);
+  padding: 10px 0; /* Ajuste le padding vertical */
+  text-align: center;
+  z-index: 1000; /* Pour s'assurer qu'il est au-dessus de la plupart des autres contenus */
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05); /* Ombre subtile vers le haut */
+}
+
+#app-footer p {
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--encre-secondaire);
+  font-family: var(--font-corps);
+}
 /* Styles pour cacher/afficher les conteneurs */
     #app-container { display: none; } /* Caché par défaut */
     #login-container {
@@ -921,10 +1018,29 @@ form button[type="submit"] {
   #section-badges .filter-zone { flex-direction: column; align-items: stretch;}
   #section-badges .filter-zone .form-group { width: 100%;}
   #section-badges #search-employee-btn { width: 100%;}
+  
     .charts-container {
-        grid-template-columns: 1fr; /* Une colonne sur mobile */
-        gap: 1.5rem;
-    }
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive */
+    gap: 2rem;
+}
+
+.chart-wrapper { /* Styles de base pour chaque conteneur de graphique */
+    background: #fff;
+    padding: 1rem 1.5rem 1.5rem;
+    border-radius: 4px;
+    box-shadow: var(--ombre-moyenne);
+    border: 1px solid var(--bordure-crayon);
+}
+
+.chart-wrapper.full-width-chart { /* Pour le graphique mensuel */
+    grid-column: 1 / -1; /* S'étend sur toutes les colonnes de la grille parente */
+}
+
+.chart-wrapper.full-width-chart .chart-box {
+    height: 320px; /* Un peu plus de hauteur car il est plus large */
+}
+
     .chart-box {
         height: 250px; /* Réduit un peu la hauteur */
     }
@@ -995,4 +1111,10 @@ form button[type="submit"] {
         padding: 10px 13px;
         font-size: 16px;
     }
+    #app-footer p {
+    font-size: 0.8em;
+  }
+  body {
+    padding-bottom: 50px; /* Ajuste pour les petits écrans si la hauteur du footer change */
+  }
 }
