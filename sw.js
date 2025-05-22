@@ -1,11 +1,12 @@
+
 // sw.js - Service Worker Minimaliste pour PWA Installable
 
-const CACHE_NAME = 'atelier-cse-cache-v3'; // Nom de ton cache (change la version si tu modifies les fichiers)
+const CACHE_NAME = 'atelier-cse-cache-v5'; // Nom de ton cache (change la version si tu modifies les fichiers)
 const URLS_TO_CACHE = [
   '.', // La page d'accueil (index.html)
   'index.html',
   'styles.css',
-  'script.js',
+  'js/main.js',
   'img/favicon.ico', // Ajoute le favicon
   // Ajoute ici les icônes importantes listées dans le manifest
   'icon/icon-192x192.png',
@@ -58,47 +59,31 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Événement fetch : Stratégie Cache-First pour les ressources statiques
-// (Pour le moment, il répond depuis le cache si trouvé, sinon réseau)
+/* ------------------------------------------------------------------ */
+/*  SW – stratégie “stale-while-revalidate” (cache d’abord, réseau après) */
+/* ------------------------------------------------------------------ */
 self.addEventListener('fetch', event => {
-   // Ne pas intercepter les requêtes non-GET ou vers Firebase (laisser Firebase gérer)
-   if (event.request.method !== 'GET' || event.request.url.includes('firestore.googleapis.com')) {
-     //console.log('SW: Ignoré (Non-GET ou Firestore)', event.request.url);
-     return;
-   }
+  // on ignore les requêtes non-GET ou vers Firestore / Google Fonts
+  if (event.request.method !== 'GET' ||
+      event.request.url.includes('firestore.googleapis.com') ||
+      event.request.url.includes('fonts.gstatic.com')) {
+    return;               // on laisse passer
+  }
 
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Trouvé dans le cache : on renvoie la réponse cachée
-        if (response) {
-          //console.log('SW: Réponse depuis le cache:', event.request.url);
-          return response;
-        }
+    caches.open(CACHE_NAME).then(async cache => {
+      // 1. on regarde si la ressource est déjà en cache
+      const cached = await cache.match(event.request);
 
-        // Non trouvé dans le cache : on requête le réseau
-        //console.log('SW: Réponse depuis le réseau:', event.request.url);
-        return fetch(event.request).then(
-          networkResponse => {
-            // Optionnel: Mettre en cache la nouvelle réponse pour la prochaine fois?
-            // Attention: Ceci est très basique, ne pas mettre en cache des réponses d'API dynamiques ici sans stratégie.
-            /*
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                 return networkResponse; // Ne cache que les ressources valides de notre domaine
-             }
-             let responseToCache = networkResponse.clone();
-             caches.open(CACHE_NAME)
-               .then(cache => {
-                 cache.put(event.request, responseToCache);
-               });
-            */
-            return networkResponse; // Renvoyer la réponse du réseau
-          }
-        ).catch(error => {
-             console.error("SW: Erreur Fetch (probablement hors ligne et non mis en cache):", error);
-             // Optionnel : Renvoyer une page "hors ligne" générique ici si vous en avez une en cache
-             // return caches.match('/offline.html');
-        });
-      })
+      // 2. on lance en parallèle la requête réseau
+      const network = fetch(event.request).then(resp => {
+        // si la réponse est OK, on met à jour le cache pour la prochaine fois
+        if (resp && resp.ok) cache.put(event.request, resp.clone());
+        return resp;
+      }).catch(() => cached); // hors-ligne : on retombe sur le cache
+
+      // 3. on renvoie tout de suite le cache si dispo, sinon on attend le réseau
+      return cached || network;
+    })
   );
 });
