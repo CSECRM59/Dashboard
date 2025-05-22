@@ -21,37 +21,35 @@
   <!-- Custom CSS (en dernier pour pouvoir surcharger) -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Firebase SDK (Pas besoin de defer ici, souvent chargés tôt) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script> <!-- Bien fermé ! -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-  <!-- Chart.js (Defer est bien ici) -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
-  <!-- Tabulator JS (Defer est une bonne idée aussi) -->
+  <!-- Tabulator JS -->
   <script src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js" defer></script>
 
-  <!-- jsPDF pour Export (Defer est une bonne idée) -->
+  <!-- jsPDF pour Export PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js" defer></script>
 
-  <!-- Ton script principal sera chargé à la fin du body ou avec defer après les autres -->
-
 </head>
 <body>
+    <!-- Écran de Connexion -->
     <div id="login-container">
-    <h1><i class="fas fa-pencil-alt"></i> Atelier du CSE</h1>
-    <p>Veuillez vous connecter avec votre compte Google.</p>
-    <button id="google-signin-btn">
-      <i class="fab fa-google"></i> Se connecter avec Google
-    </button>
-    <p id="login-error"></p> <!-- Pour les messages d'erreur -->
-  </div>
+        <h1><i class="fas fa-pencil-alt"></i> Atelier du CSE</h1>
+        <p>Veuillez vous connecter avec votre compte Google.</p>
+        <button id="google-signin-btn">
+          <i class="fab fa-google"></i> Se connecter avec Google
+        </button>
+        <p id="login-error"></p>
+    </div>
 
-  <!-- === CONTENEUR PRINCIPAL DE L'APPLICATION (caché par défaut) === -->
+  <!-- Conteneur Principal de l'Application -->
   <div id="app-container">
-    <!-- Zone optionnelle pour afficher l'utilisateur connecté et le bouton de déconnexion -->
     <div id="user-info-area">
         <span id="user-email-display"></span>
         <button id="google-signout-btn" title="Se déconnecter">
@@ -59,549 +57,272 @@
         </button>
     </div>
 
-  <header>
-    <h1>Atelier du CSE</h1>
-  </header>
+    <header>
+      <h1>Atelier du CSE</h1>
+    </header>
 
-  <!-- Menu de navigation - Post-its -->
-  <nav class="menu">
-    <div class="menu-item" data-section="actus">
-      <i class="fas fa-newspaper"></i>
-      <span class="tooltip">Actualités</span>
-    </div>
-    <div class="menu-item" data-section="membres">
-      <i class="fas fa-users"></i>
-      <span class="tooltip">Membres</span>
-    </div>
-    <div class="menu-item" data-section="partenaires">
-      <i class="fas fa-handshake"></i>
-      <span class="tooltip">Partenaires</span>
-    </div>
-    <div class="menu-item" data-section="demandes">
-      <i class="fas fa-address-book"></i>
-      <span class="tooltip">Demandes</span>
-    </div>
-    <div class="menu-item" data-section="calendrier">
-      <i class="fas fa-calendar-alt"></i>
-      <span class="tooltip">Calendrier</span>
-    </div>
-    <div class="menu-item" data-section="badges">
-      <i class="fas fa-coffee"></i>
-      <span class="tooltip">Badges Café</span>
-    </div>
-    <div class="menu-item" data-section="coffee">
-      <i class="fas fa-exclamation-circle"></i>
-      <span class="tooltip">Signalements Café</span>
-    </div>
-    <div class="menu-item" data-section="synthese">
-      <i class="fas fa-chart-pie"></i>
-      <span class="tooltip">Synthèse</span>
-    </div>
-    <div class="menu-item" data-section="params">
-      <i class="fas fa-cog"></i>
-      <span class="tooltip">Paramètres</span>
-    </div>
-  </nav>
+    <!-- Menu de Navigation -->
+    <nav class="menu">
+      <div class="menu-item" data-section="actus"><i class="fas fa-newspaper"></i><span class="tooltip">Actualités</span></div>
+      <div class="menu-item" data-section="membres"><i class="fas fa-users"></i><span class="tooltip">Membres</span></div>
+      <div class="menu-item" data-section="partenaires"><i class="fas fa-handshake"></i><span class="tooltip">Partenaires</span></div>
+      <div class="menu-item" data-section="exposants"><i class="fas fa-store"></i><span class="tooltip">Exposants</span></div>
+      <div class="menu-item" data-section="demandes"><i class="fas fa-address-book"></i><span class="tooltip">Demandes</span></div>
+      <div class="menu-item" data-section="infosUtiles"><i class="fas fa-info-circle"></i><span class="tooltip">Infos Utiles</span></div>
+      <div class="menu-item" data-section="badges"><i class="fas fa-id-badge"></i><span class="tooltip">Badges Café</span></div> <!-- Icône changée pour badges -->
+      <div class="menu-item" data-section="coffee"><i class="fas fa-mug-hot"></i><span class="tooltip">Signalements Café</span></div> <!-- Icône changée pour café -->
+      <div class="menu-item" data-section="synthese"><i class="fas fa-chart-pie"></i><span class="tooltip">Synthèse</span></div>
+      <div class="menu-item" data-section="params"><i class="fas fa-cog"></i><span class="tooltip">Paramètres</span></div>
+    </nav>
 
-  <!-- Sections de contenu -->
-  <section class="content" id="section-actus">
-    <h2>Les Actualités</h2>
-    <div id="news-list" class="grid">
-      <div class="grid-item add-item">
-        <button id="open-add-actualite">Nouvelle Actu</button>
+    <!-- Sections de Contenu -->
+    <section class="content" id="section-actus">
+      <h2>Les Actualités</h2>
+      <div id="news-list" class="grid">
+        <div class="grid-item add-item"><button id="open-add-actualite">Nouvelle Actu</button></div>
       </div>
-      <!-- News items injectés ici -->
-    </div>
-  </section>
+    </section>
 
-  <section class="content" id="section-membres">
-    <h2>L'Équipe Membres</h2>
-    <div id="members-list" class="grid">
-      <div class="grid-item add-item">
-        <button id="open-add-membre">Nouveau Membre</button>
+    <section class="content" id="section-membres">
+      <h2>L'Équipe Membres</h2>
+      <div id="members-list" class="grid">
+        <div class="grid-item add-item"><button id="open-add-membre">Nouveau Membre</button></div>
       </div>
-      <!-- Members items injectés ici -->
-    </div>
-  </section>
+    </section>
 
-  <section class="content" id="section-partenaires">
-    <h2>Nos Partenaires</h2>
-    <div id="partners-list" class="grid">
-      <div class="grid-item add-item">
-        <button id="open-add-partenaire">Nouveau Partenaire</button>
+    <section class="content" id="section-partenaires">
+      <h2>Nos Partenaires</h2>
+      <div id="partners-list" class="grid">
+        <div class="grid-item add-item"><button id="open-add-partenaire">Nouveau Partenaire</button></div>
       </div>
-      <!-- Partners items injectés ici -->
-    </div>
-  </section>
+    </section>
 
-  <section class="content" id="section-demandes">
-    <h2>Les Demandes</h2>
-    <div id="demandes-list" class="grid">
-      <!-- Demandes injectées ici -->
-    </div>
-  </section>
-
-  <section class="content" id="section-calendrier">
-    <h2>Le Calendrier</h2>
-    <div id="calendar-list" class="grid">
-      <div class="grid-item add-item">
-        <button id="open-add-calendrier">Nouvel Événement</button>
+    <section class="content" id="section-exposants">
+      <h2>Les Exposants</h2>
+      <div id="exposants-planning-area" style="margin-top: 3rem;">
+        <h3>Planning des Exposants</h3>
+        <div class="calendar-controls" style="margin-bottom: 1rem; text-align: center;">
+            <button id="prev-month-exposant" class="btn btn-secondary btn-sm"><i class="fas fa-chevron-left"></i> Mois Préc.</button>
+            <span id="current-month-year-exposant" style="margin: 0 1rem; font-weight: bold; font-family: var(--font-titre-secondaire); font-size: 1.2em;"></span>
+            <button id="next-month-exposant" class="btn btn-secondary btn-sm">Mois Suiv. <i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div id="exposant-calendar-grid" class="calendar-grid-style"></div>
       </div>
-      <!-- Calendar items injectés ici -->
-    </div>
-  </section>
+        <div id="exposants-list" class="grid">
+        <div class="grid-item add-item"><button id="open-add-exposant">Nouvel Exposant</button></div>
+      </div>
+      
+    </section>
+
+    <section class="content" id="section-demandes">
+      <h2>Les Demandes</h2>
+      <div id="demandes-list" class="grid"></div>
+    </section>
+
+    <section class="content" id="section-infosUtiles">
+      <h2>Informations Utiles</h2>
+      <div id="infos-utiles-list" class="grid">
+        <div class="grid-item add-item"><button id="open-add-info-utile">Nouvelle Info</button></div>
+      </div>
+    </section>
 
     <section class="content" id="section-badges">
-    <h2>Gestion Badges Café</h2>
-
-    <!-- Zone de Recherche Dynamique -->
-    <div class="search-zone form-group">
-        <label for="employee-search">Rechercher un salarié (Nom) :</label>
-        <input type="text" id="employee-search" placeholder="Entrez les premières lettres du nom...">
-        <div id="search-results" class="search-results-list">
-            <!-- Les résultats s'afficheront ici -->
-        </div>
-    </div>
-
-    <!-- Zone Salarié Sélectionné -->
-    <div id="selected-employee-zone" style="display: none;" class="selected-info">
-        <h3>Salarié Sélectionné</h3>
-        <p id="selected-employee-details"></p> <!-- Nom, Prénom, N° Salarié?, Badges existants... -->
-        <div id="existing-keys-list">
-             <h4>Badges attribués :</h4>
-             <ul>
-                 <!-- Liste des clés/badges existants -->
-             </ul>
-             <p class="no-keys-message" style="display:none;"><i>Aucun badge attribué.</i></p>
-        </div>
-
-        <!-- Formulaire d'Assignation de Badge (apparaît ici) -->
-        <div class="assign-form">
-            <h4>Assigner un Nouveau Badge</h4>
-            <form id="form-assign-badge">
-                 <input type="hidden" id="selected-employee-id"> <!-- Stocke l'ID Firestore du salarié -->
-                 <input type="hidden" id="selected-employee-nom">
-                 <input type="hidden" id="selected-employee-prenom">
-
-                <div class="form-group">
-                    <label for="badge-number">Numéro du Nouveau Badge :</label>
-                    <input type="text" id="badge-number" placeholder="Ex : CAF12345" required>
-                </div>
-                <div class="form-group">
-                    <label for="badge-type">Type d'attribution :</label>
-                    <select id="badge-type" required>
-                        <option value="" disabled selected>-- Choisir --</option>
-                        <option value="E">Echange (Ancien badge rendu)</option>
-                        <option value="R">Caution (Règlement 7€)</option>
-                    </select>
-                </div>
-                 <!-- Montant apparaît seulement si Type = 'R' -->
-                 <div class="form-group" id="caution-amount-group" style="display: none;">
-                    <label for="badge-amount">Montant Caution :</label>
-                    <input type="number" id="badge-amount" value="7" step="0.01" readonly> <!-- Par défaut 7€, peut-être en lecture seule? -->
-                     <span>€</span>
-                </div>
-                <button type="submit" class="btn btn-primary">Assigner le Badge</button>
-            </form>
-        </div>
-        <div class="delete-zone" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--danger-couleur);">
-            <h4>Supprimer le salarié</h4>
-            <p style="font-size: 0.9em; color: var(--encre-secondaire);">Supprime définitivement le salarié de la base. Vérifiez s'il faut rembourser une caution.</p>
-            <button id="delete-employee-btn" class="btn btn-danger" style="background-color: var(--danger-couleur); color: white;">
-                <i class="fas fa-trash-alt"></i> Supprimer ce salarié
-            </button>
-        </div>
-        <!-- === FIN NOUVEAU === -->
-    </div>
-
-    <!-- Message pour Nouveau Salarié -->
-    <div id="new-employee-prompt" style="display: none;" class="info-prompt">
-        <p>Ce nom ne correspond à aucun salarié existant.</p>
-        <button id="create-new-employee-btn" class="btn btn-secondary">Créer ce salarié et lui assigner un badge</button>
-    </div>
-
-    <!-- Zone de Notification (Réutiliser ou dédiée) -->
-    <div id="badge-message" class="message-area"></div>
-
-  </section>
-
-  <!-- Dans CodeSauv-atelier.txt -->
-<section class="content" id="section-coffee">
-  <h2>Pannes Machine Café - Analyse</h2>
-
-  <!-- NOUVELLE ZONE STATS & GRAPHIQUES -->
-  <div id="coffee-analytics-area">
-    <div class="stat-boxes-container">
-        <div class="stat-box">
-            <h3>Signalements (Total)</h3>
-            <p id="stat-total-reports">0</p>
-        </div>
-         <div class="stat-box">
-            <h3>En Cours</h3>
-            <p id="stat-reports-en-cours">0</p>
-        </div>
-        <div class="stat-box">
-            <h3>Traités</h3>
-            <p id="stat-reports-traite">0</p>
-        </div>
-    </div>
-
-    <div class="charts-container">
-      <div class="chart-wrapper">
-        <h3>Top Problèmes Signalés</h3>
-        <div class="chart-box">
-            <canvas id="problem-chart"></canvas>
-        </div>
+      <h2>Gestion Badges Café</h2>
+      <div class="search-zone form-group">
+          <label for="employee-search">Rechercher un salarié (Nom) :</label>
+          <input type="text" id="employee-search" placeholder="Entrez les premières lettres du nom...">
+          <div id="search-results" class="search-results-list"></div>
       </div>
-      <div class="chart-wrapper">
-        <h3>Machines les Plus Signalées</h3>
-         <div class="chart-box">
-            <canvas id="machine-chart"></canvas>
-         </div>
+      <div id="selected-employee-zone" style="display: none;" class="selected-info">
+          <h3>Salarié Sélectionné</h3>
+          <p id="selected-employee-details"></p>
+          <div id="existing-keys-list">
+               <h4>Badges attribués :</h4>
+               <ul></ul>
+               <p class="no-keys-message" style="display:none;"><i>Aucun badge attribué.</i></p>
+          </div>
+          <div class="assign-form">
+              <h4>Assigner un Nouveau Badge</h4>
+              <form id="form-assign-badge">
+                   <input type="hidden" id="selected-employee-id">
+                   <input type="hidden" id="selected-employee-nom">
+                   <input type="hidden" id="selected-employee-prenom">
+                  <div class="form-group">
+                      <label for="badge-number">N° Nouveau Badge :</label>
+                      <input type="text" id="badge-number" placeholder="Ex : CAF12345" required>
+                  </div>
+                  <div class="form-group">
+                      <label for="badge-type">Type d'attribution :</label>
+                      <select id="badge-type" required>
+                          <option value="" disabled selected>-- Choisir --</option>
+                          <option value="E">Echange</option>
+                          <option value="R">Caution (7€)</option>
+                      </select>
+                  </div>
+                   <div class="form-group" id="caution-amount-group" style="display: none;">
+                      <label for="badge-amount">Montant Caution :</label>
+                      <input type="number" id="badge-amount" value="7" step="0.01" readonly><span>€</span>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Assigner Badge</button>
+              </form>
+          </div>
+          <div class="delete-zone" style="margin-top:2rem;padding-top:1rem;border-top:1px dashed var(--danger-couleur);">
+              <h4>Supprimer le salarié</h4>
+              <p style="font-size:0.9em;color:var(--encre-secondaire);">Supprime définitivement le salarié. Vérifiez remboursement caution.</p>
+              <button id="delete-employee-btn" class="btn btn-danger" style="background-color:var(--danger-couleur);color:white;"><i class="fas fa-trash-alt"></i> Supprimer ce salarié</button>
+          </div>
       </div>
-       <div class="chart-wrapper">
-        <h3>Répartition Statuts</h3>
-         <div class="chart-box pie-chart-box">
-            <canvas id="status-chart"></canvas>
-         </div>
+      <div id="new-employee-prompt" style="display:none;" class="info-prompt">
+          <p>Ce nom ne correspond à aucun salarié existant.</p>
+          <button id="create-new-employee-btn" class="btn btn-secondary">Créer Salarié et Assigner Badge</button>
       </div>
+      <div id="badge-message" class="message-area"></div>
+    </section>
+
+    <section class="content" id="section-coffee">
+      <h2>Pannes Machine Café - Analyse</h2>
+      <div id="coffee-analytics-area">
+        <div class="stat-boxes-container">
+            <div class="stat-box"><h3>Signalements (Total)</h3><p id="stat-total-reports">0</p></div>
+            <div class="stat-box"><h3>En Cours</h3><p id="stat-reports-en-cours">0</p></div>
+            <div class="stat-box"><h3>Traités</h3><p id="stat-reports-traite">0</p></div>
+        </div>
+        <div class="charts-container">
+  <div class="chart-wrapper">
+    <h3>Top Problèmes Signalés</h3>
+    <div class="chart-box">
+        <canvas id="problem-chart"></canvas>
     </div>
   </div>
-  <!-- FIN NOUVELLE ZONE -->
-
-  <h3>Détail des Signalements</h3>
-  <div id="coffee-table-container">
-    <!-- Le tableau Tabulator sera généré ici par JavaScript -->
+  <div class="chart-wrapper">
+    <h3>Machines les Plus Signalées</h3>
+     <div class="chart-box">
+        <canvas id="machine-chart"></canvas>
+     </div>
+  </div>
+   <div class="chart-wrapper">
+    <h3>Répartition Statuts</h3>
+     <div class="chart-box pie-chart-box">
+        <canvas id="status-chart"></canvas>
+     </div>
   </div>
 
-    <!-- NOUVEAU TABLEAU POUR LES RECHARGEMENTS -->
-  <h3 style="margin-top: 2.5rem;">Problèmes de Rechargement / Paiement (En Cours)</h3>
-  <div id="recharge-table-container">
-      <!-- Le tableau des rechargements sera généré ici par JavaScript -->
-  </div>
-  <div class="export-buttons" style="margin-bottom: 1rem; text-align: right;">
-      <button id="export-recharge-csv-btn" class="btn btn-secondary" style="margin-left: 0.5rem;">
-          <i class="fas fa-file-csv"></i> Exporter CSV
-      </button>
-      <button id="export-recharge-pdf-btn" class="btn btn-secondary" style="margin-left: 0.5rem;">
-          <i class="fas fa-file-pdf"></i> Exporter PDF
-      </button>
-  </div>
-
-</section>
-
-  <section class="content" id="section-synthese">
-    <h2>La Synthèse en Notes</h2>
-    <div id="synthese-container">
-      <!-- Synth cards injectées ici -->
-    </div>
-    <div id="synth-chart-container">
-      <canvas id="synth-chart"></canvas>
-    </div>
-  </section>
-
-  <section class="content" id="section-params">
-    <h2>Paramètres de l'Atelier</h2>
-    <!-- Contenu des paramètres -->
-     <p>Section des paramètres en cours de construction...</p>
-  </section>
-
-  <!-- MODALS (Carnets ou Feuilles Volantes) -->
-
-  <!-- Actualités -->
-  <div id="modal-actualites" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-actualites">×</span>
-      <h2>Nouvelle Actualité</h2>
-      <form id="form-actualites">
-        <div class="form-group">
-          <label for="news-title">Titre</label>
-          <input type="text" id="news-title" required>
-        </div>
-        <div class="form-group">
-          <label for="news-content">Contenu</label>
-          <textarea id="news-content" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="news-date">Date</label>
-          <input type="date" id="news-date" required>
-        </div>
-        <div class="form-group">
-    <label for="news-image-file">Choisir une Image</label>
-    <input type="file" id="news-image-file" accept="image/png, image/jpeg, image/gif">
-    <!-- Zone pour afficher le statut de l'upload -->
-    <div id="news-upload-status" style="font-size: 0.85em; margin-top: 5px; min-height: 1.2em;"></div>
-    <!-- Input caché pour stocker l'URL Imgur finale -->
-    <input type="hidden" id="news-image-url">
 </div>
-        <div class="form-group">
-          <label for="news-link">Lien Internet (Optionnel)</label>
-          <input type="url" id="news-link" placeholder="https://www.exemple.com">
-        </div>
-        <div class="form-group">
-          <label for="news-status">Statut</label>
-          <select id="news-status">
-            <option value="Publié">Publié</option>
-            <option value="Brouillon">Brouillon</option>
-          </select>
-        </div>
-        <button type="submit" id="submit-add-news" class="btn btn-primary">Noter</button>
-      </form>
-    </div>
-  </div>
-  <div id="modal-edit-actualite" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-edit-actualite">×</span>
-      <h2>Modifier l'Actualité</h2>
-      <form id="form-edit-actualite">
-        <input type="hidden" id="edit-news-id">
-        <div class="form-group">
-          <label for="edit-news-title">Titre</label>
-          <input type="text" id="edit-news-title" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-news-content">Contenu</label>
-          <textarea id="edit-news-content" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="edit-news-date">Date</label>
-          <input type="date" id="edit-news-date" required>
-        </div>
-        
- <!-- Champ caché pour garder l'URL existante -->
-        <input type="hidden" id="edit-news-existing-url">
-
-       <div class="form-group">
-    <label for="edit-news-image-file">Remplacer l'Image (Optionnel)</label>
-    <!-- Affichage de l'image actuelle si elle existe -->
-    <div id="edit-current-image-display" style="margin-bottom: 10px;">
-        <!-- L'image actuelle sera injectée ici par JS -->
-    </div>
-    <input type="file" id="edit-news-image-file" accept="image/png, image/jpeg, image/gif">
-    <!-- Zone pour afficher le statut de l'upload -->
-    <div id="edit-news-upload-status" style="font-size: 0.85em; margin-top: 5px; min-height: 1.2em;"></div>
-    <!-- Input caché pour stocker la NOUVELLE URL Imgur finale si une nouvelle image est uploadée -->
-    <input type="hidden" id="edit-news-image-url">
-    <!-- Stocker l'URL originale au cas où l'utilisateur n'uploade pas de nouvelle image -->
-    <input type="hidden" id="edit-news-original-image-url">
-</div>
-        <div class="form-group">
-          <label for="edit-news-link">Lien Internet (Optionnel)</label>
-          <input type="url" id="edit-news-link" placeholder="https://www.exemple.com">
-        </div>  
-        <div class="form-group">
-          <label for="edit-news-status">Statut</label>
-          <select id="edit-news-status">
-            <option value="Publié">Publié</option>
-            <option value="Brouillon">Brouillon</option>
-          </select>
-        </div>
-        <button type="submit" id="submit-edit-news" class="btn btn-primary">Mettre à jour</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Membres -->
-  <div id="modal-membres" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-membres">×</span>
-      <h2>Ajouter un Membre</h2>
-      <form id="form-membres">
-        <div class="form-group">
-          <label for="member-nom">Nom</label>
-          <input type="text" id="member-nom" required>
-        </div>
-        <div class="form-group">
-          <label for="member-prenom">Prénom</label>
-          <input type="text" id="member-prenom" required>
-        </div>
-        <div class="form-group">
-          <label for="member-mail">Mail</label>
-          <input type="email" id="member-mail" placeholder="nom@exemple.com" required>
-        </div>
-        <div class="form-group">
-          <label for="member-operation">Opération</label>
-          <input type="text" id="member-operation" required>
-        </div>
-        <div class="form-group">
-          <label for="member-role">Rôle</label>
-          <input type="text" id="member-role" required>
-        </div>
-        <div class="form-group">
-          <label for="member-photo">Photo URL</label>
-          <input type="url" id="member-photo" placeholder="http://...">
-        </div>
-        <button type="submit" class="btn btn-primary">Ajouter</button>
-      </form>
-    </div>
-  </div>
-  <div id="modal-edit-membre" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-edit-membre">×</span>
-      <h2>Modifier le Membre</h2>
-      <form id="form-edit-membre">
-        <input type="hidden" id="edit-member-id">
-        <div class="form-group">
-          <label for="edit-member-nom">Nom</label>
-          <input type="text" id="edit-member-nom" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-member-prenom">Prénom</label>
-          <input type="text" id="edit-member-prenom" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-member-mail">Mail</label>
-          <input type="email" id="edit-member-mail" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-member-operation">Opération</label>
-          <input type="text" id="edit-member-operation" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-member-role">Rôle</label>
-          <input type="text" id="edit-member-role" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-member-photo">Photo URL</label>
-          <input type="url" id="edit-member-photo" placeholder="http://...">
-        </div>
-        <button type="submit" class="btn btn-primary">Mettre à jour</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Partenaires -->
-  <div id="modal-partenaires" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-partenaires">×</span>
-      <h2>Ajouter un Partenaire</h2>
-      <form id="form-partenaires">
-        <div class="form-group">
-          <label for="partenaire-categorie">Catégorie</label>
-          <input type="text" id="partenaire-categorie" required>
-        </div>
-        <div class="form-group">
-          <label for="partenaire-nom">Nom</label>
-          <input type="text" id="partenaire-nom" required>
-        </div>
-        <div class="form-group">
-          <label for="partenaire-description">Description</label>
-          <textarea id="partenaire-description" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="partenaire-lien">Lien</label>
-          <input type="url" id="partenaire-lien" placeholder="http://..." required>
-        </div>
-        <div class="form-group">
-          <label for="partenaire-logo">Logo URL</label>
-          <input type="url" id="partenaire-logo" placeholder="http://...">
-        </div>
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
-      </form>
-    </div>
-  </div>
-  <div id="modal-edit-partenaire" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-edit-partenaire">×</span>
-      <h2>Modifier le Partenaire</h2>
-      <form id="form-edit-partenaire">
-        <input type="hidden" id="edit-partenaire-id">
-        <div class="form-group">
-          <label for="edit-partenaire-categorie">Catégorie</label>
-          <input type="text" id="edit-partenaire-categorie" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-partenaire-nom">Nom</label>
-          <input type="text" id="edit-partenaire-nom" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-partenaire-description">Description</label>
-          <textarea id="edit-partenaire-description" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="edit-partenaire-lien">Lien</label>
-          <input type="url" id="edit-partenaire-lien" placeholder="http://..." required>
-        </div>
-        <div class="form-group">
-          <label for="edit-partenaire-logo">Logo URL</label>
-          <input type="url" id="edit-partenaire-logo" placeholder="http://...">
-        </div>
-        <button type="submit" class="btn btn-primary">Mettre à jour</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Calendrier -->
-  <div id="modal-calendrier" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-calendrier">×</span>
-      <h2>Nouvel Événement</h2>
-      <form id="form-calendrier">
-        <div class="form-group">
-          <label for="event-title">Titre</label>
-          <input type="text" id="event-title" required>
-        </div>
-        <div class="form-group">
-          <label for="event-description">Description</label>
-          <textarea id="event-description" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="event-date">Date début</label>
-          <input type="date" id="event-date" required>
-        </div>
-        <div class="form-group">
-          <label for="event-time">Heure début</label>
-          <input type="time" id="event-time" required>
-        </div>
-        <div class="form-group">
-          <label for="event-end-date">Date fin</label>
-          <input type="date" id="event-end-date" required>
-        </div>
-        <div class="form-group">
-          <label for="event-end-time">Heure fin</label>
-          <input type="time" id="event-end-time" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Ajouter</button>
-      </form>
-    </div>
-  </div>
-  <div id="modal-edit-calendrier" class="modal">
-    <div class="modal-content">
-      <span class="close" data-modal="modal-edit-calendrier">×</span>
-      <h2>Modifier l'Événement</h2>
-      <form id="form-edit-calendrier">
-        <input type="hidden" id="edit-event-id">
-        <div class="form-group">
-          <label for="edit-event-title">Titre</label>
-          <input type="text" id="edit-event-title" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-event-description">Description</label>
-          <textarea id="edit-event-description" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="edit-event-date">Date début</label>
-          <input type="date" id="edit-event-date" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-event-time">Heure début</label>
-          <input type="time" id="edit-event-time" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-event-end-date">Date fin</label>
-          <input type="date" id="edit-event-end-date" required>
-        </div>
-        <div class="form-group">
-          <label for="edit-event-end-time">Heure fin</label>
-          <input type="time" id="edit-event-end-time" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Mettre à jour</button>
-      </form>
-    </div>
+  <!-- === GRAPHIQUE MENSUEL AVEC CLASSE POUR LA LARGEUR === -->
+  <div class="chart-wrapper full-width-chart">
+  <h3>Signalements par Mois (12 derniers mois)</h3>
+  <div class="chart-box">
+    <canvas id="monthly-reports-chart"></canvas>
   </div>
 </div>
+          <h3>Détail des Signalements</h3>
+      <div id="coffee-table-container"></div>
+      <div class="export-buttons" style="margin-top:1rem;text-align:right;"><button id="export-coffee-en-cours-pdf-btn" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> PDF (En Cours)</button></div>
+      <h3 style="margin-top:2.5rem;">Problèmes Rechargement/Paiement (En Cours)</h3>
+      <div id="recharge-table-container"></div>
+      <div class="export-buttons" style="margin-top:1rem; margin-bottom:1rem;text-align:right;">
+          <button id="export-recharge-csv-btn" class="btn btn-secondary" style="margin-left:0.5rem;"><i class="fas fa-file-csv"></i> CSV</button>
+          <button id="export-recharge-pdf-btn" class="btn btn-secondary" style="margin-left:0.5rem;"><i class="fas fa-file-pdf"></i> PDF</button>
+      </div>
+    </section>
+
+    <section class="content" id="section-synthese">
+      <h2>La Synthèse en Notes</h2>
+      <div id="synthese-container"></div>
+      <div id="synth-chart-container"><canvas id="synth-chart"></canvas></div>
+    </section>
+
+    <section class="content" id="section-params">
+      <h2>Paramètres de l'Atelier</h2>
+      <p>Section des paramètres en cours de construction...</p>
+    </section>
+
+    <!-- === MODALS === -->
+    <!-- Actualités -->
+    <div id="modal-actualites" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="modal-actualites">×</span>
+        <h2>Nouvelle Actualité</h2>
+        <form id="form-actualites">
+          <div class="form-group"><label for="news-title">Titre</label><input type="text" id="news-title" required></div>
+          <div class="form-group"><label for="news-content">Contenu</label><textarea id="news-content" rows="4" required></textarea></div>
+          <div class="form-group"><label for="news-date">Date</label><input type="date" id="news-date" required></div>
+          <div class="form-group"><label for="news-image-file">Image</label><input type="file" id="news-image-file" accept="image/*"><div id="news-upload-status" class="upload-status"></div><input type="hidden" id="news-image-url"></div>
+          <div class="form-group"><label for="news-link">Lien (Optionnel)</label><input type="url" id="news-link" placeholder="https://..."></div>
+          <div class="form-group"><label for="news-status">Statut</label><select id="news-status"><option value="Publié">Publié</option><option value="Brouillon">Brouillon</option></select></div>
+          <button type="submit" id="submit-add-news" class="btn btn-primary">Noter</button>
+        </form>
+      </div>
+    </div>
+    <div id="modal-edit-actualite" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="modal-edit-actualite">×</span>
+        <h2>Modifier l'Actualité</h2>
+        <form id="form-edit-actualite">
+          <input type="hidden" id="edit-news-id">
+          <div class="form-group"><label for="edit-news-title">Titre</label><input type="text" id="edit-news-title" required></div>
+          <div class="form-group"><label for="edit-news-content">Contenu</label><textarea id="edit-news-content" rows="4" required></textarea></div>
+          <div class="form-group"><label for="edit-news-date">Date</label><input type="date" id="edit-news-date" required></div>
+          <div class="form-group"><label for="edit-news-image-file">Remplacer Image</label><div id="edit-current-image-display" class="current-image-display"></div><input type="file" id="edit-news-image-file" accept="image/*"><div id="edit-news-upload-status" class="upload-status"></div><input type="hidden" id="edit-news-image-url"><input type="hidden" id="edit-news-original-image-url"></div>
+          <div class="form-group"><label for="edit-news-link">Lien</label><input type="url" id="edit-news-link" placeholder="https://..."></div>
+          <div class="form-group"><label for="edit-news-status">Statut</label><select id="edit-news-status"><option value="Publié">Publié</option><option value="Brouillon">Brouillon</option></select></div>
+          <button type="submit" id="submit-edit-news" class="btn btn-primary">Mettre à Jour</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Membres -->
+    <div id="modal-membres" class="modal"><div class="modal-content"><span class="close" data-modal="modal-membres">×</span><h2>Ajouter Membre</h2><form id="form-membres"><div class="form-group"><label for="member-nom">Nom</label><input type="text" id="member-nom" required></div><div class="form-group"><label for="member-prenom">Prénom</label><input type="text" id="member-prenom" required></div><div class="form-group"><label for="member-mail">Mail</label><input type="email" id="member-mail" required></div><div class="form-group"><label for="member-operation">Opération</label><input type="text" id="member-operation" required></div><div class="form-group"><label for="member-role">Rôle</label><input type="text" id="member-role" required></div><div class="form-group"><label for="member-photo">Photo URL</label><input type="url" id="member-photo" placeholder="http://..."></div><button type="submit" class="btn btn-primary">Ajouter</button></form></div></div>
+    <div id="modal-edit-membre" class="modal"><div class="modal-content"><span class="close" data-modal="modal-edit-membre">×</span><h2>Modifier Membre</h2><form id="form-edit-membre"><input type="hidden" id="edit-member-id"><div class="form-group"><label for="edit-member-nom">Nom</label><input type="text" id="edit-member-nom" required></div><div class="form-group"><label for="edit-member-prenom">Prénom</label><input type="text" id="edit-member-prenom" required></div><div class="form-group"><label for="edit-member-mail">Mail</label><input type="email" id="edit-member-mail" required></div><div class="form-group"><label for="edit-member-operation">Opération</label><input type="text" id="edit-member-operation" required></div><div class="form-group"><label for="edit-member-role">Rôle</label><input type="text" id="edit-member-role" required></div><div class="form-group"><label for="edit-member-photo">Photo URL</label><input type="url" id="edit-member-photo" placeholder="http://..."></div><button type="submit" class="btn btn-primary">Mettre à Jour</button></form></div></div>
+
+    <!-- Partenaires -->
+    <div id="modal-partenaires" class="modal"><div class="modal-content"><span class="close" data-modal="modal-partenaires">×</span><h2>Ajouter Partenaire</h2><form id="form-partenaires"><div class="form-group"><label for="partenaire-categorie">Catégorie</label><input type="text" id="partenaire-categorie" required></div><div class="form-group"><label for="partenaire-nom">Nom</label><input type="text" id="partenaire-nom" required></div><div class="form-group"><label for="partenaire-description">Description</label><textarea id="partenaire-description" rows="4" required></textarea></div><div class="form-group"><label for="partenaire-lien">Lien</label><input type="url" id="partenaire-lien" required></div><div class="form-group"><label for="partner-logo-file">Logo</label><input type="file" id="partner-logo-file" accept="image/*"><div id="partner-upload-status" class="upload-status"></div><input type="hidden" id="partner-logo-url"></div><button type="submit" class="btn btn-primary">Enregistrer</button></form></div></div>
+    <div id="modal-edit-partenaire" class="modal"><div class="modal-content"><span class="close" data-modal="modal-edit-partenaire">×</span><h2>Modifier Partenaire</h2><form id="form-edit-partenaire"><input type="hidden" id="edit-partenaire-id"><div class="form-group"><label for="edit-partenaire-categorie">Catégorie</label><input type="text" id="edit-partenaire-categorie" required></div><div class="form-group"><label for="edit-partenaire-nom">Nom</label><input type="text" id="edit-partenaire-nom" required></div><div class="form-group"><label for="edit-partenaire-description">Description</label><textarea id="edit-partenaire-description" rows="4" required></textarea></div><div class="form-group"><label for="edit-partenaire-lien">Lien</label><input type="url" id="edit-partenaire-lien" required></div><div class="form-group"><label for="edit-partner-logo-file">Remplacer Logo</label><div id="edit-current-partner-logo-display" class="current-image-display"></div><input type="file" id="edit-partner-logo-file" accept="image/*"><div id="edit-partner-upload-status" class="upload-status"></div><input type="hidden" id="edit-partner-logo-url"><input type="hidden" id="edit-partner-original-logo-url"></div><button type="submit" class="btn btn-primary">Mettre à Jour</button></form></div></div>
+
+    <!-- Exposants -->
+    <div id="modal-exposants" class="modal"><div class="modal-content"><span class="close" data-modal="modal-exposants">×</span><h2>Ajouter Exposant</h2><form id="form-exposants"><div class="form-group"><label for="exposant-nom">Nom Exposant</label><input type="text" id="exposant-nom" required></div><div class="form-group"><label for="exposant-categorie">Catégorie</label><input type="text" id="exposant-categorie" required></div><div class="form-group"><label for="exposant-description">Description</label><textarea id="exposant-description" rows="3" required></textarea></div><div class="form-group"><label for="exposant-stand">N° Stand</label><input type="text" id="exposant-stand"></div><div class="form-group"><label for="exposant-contact-nom">Nom Contact</label><input type="text" id="exposant-contact-nom"></div><div class="form-group"><label for="exposant-contact-email">Email Contact</label><input type="email" id="exposant-contact-email"></div><div class="form-group"><label for="exposant-contact-tel">Tél Contact</label><input type="tel" id="exposant-contact-tel"></div><div class="form-group"><label for="exposant-logo-file">Logo/Photo</label><input type="file" id="exposant-logo-file" accept="image/*"><div id="exposant-upload-status" class="upload-status"></div><input type="hidden" id="exposant-logo-url"></div><button type="submit" id="submit-add-exposant" class="btn btn-primary">Ajouter</button></form></div></div>
+    <div id="modal-edit-exposant" class="modal"><div class="modal-content"><span class="close" data-modal="modal-edit-exposant">×</span><h2>Modifier Exposant</h2><form id="form-edit-exposant"><input type="hidden" id="edit-exposant-id"><div class="form-group"><label for="edit-exposant-nom">Nom</label><input type="text" id="edit-exposant-nom" required></div><div class="form-group"><label for="edit-exposant-categorie">Catégorie</label><input type="text" id="edit-exposant-categorie" required></div><div class="form-group"><label for="edit-exposant-description">Description</label><textarea id="edit-exposant-description" rows="3" required></textarea></div><div class="form-group"><label for="edit-exposant-stand">N° Stand</label><input type="text" id="edit-exposant-stand"></div><div class="form-group"><label for="edit-exposant-contact-nom">Nom Contact</label><input type="text" id="edit-exposant-contact-nom"></div><div class="form-group"><label for="edit-exposant-contact-email">Email Contact</label><input type="email" id="edit-exposant-contact-email"></div><div class="form-group"><label for="edit-exposant-contact-tel">Tél Contact</label><input type="tel" id="edit-exposant-contact-tel"></div><div class="form-group"><label for="edit-exposant-logo-file">Remplacer Logo</label><div id="edit-current-exposant-logo-display" class="current-image-display"></div><input type="file" id="edit-exposant-logo-file" accept="image/*"><div id="edit-exposant-upload-status" class="upload-status"></div><input type="hidden" id="edit-exposant-logo-url"><input type="hidden" id="edit-exposant-original-logo-url"></div><button type="submit" id="submit-edit-exposant" class="btn btn-primary">Mettre à Jour</button></form></div></div>
+    <div id="modal-exposant-planning-date" class="modal"><div class="modal-content"><span class="close" data-modal="modal-exposant-planning-date">×</span><h2 id="modal-planning-date-title">Planning Exposants</h2><input type="hidden" id="planning-selected-date"><div id="planned-exposants-list"></div><hr style="margin:1.5rem 0;"><h4>Ajouter Exposant à cette date :</h4><form id="form-add-exposant-to-date"><div class="form-group"><label for="select-exposant-for-planning">Choisir Exposant :</label><select id="select-exposant-for-planning" required><option value="">-- Sélectionner --</option></select></div><div class="form-group"><label for="exposant-planning-heure-debut">Heure Début :</label><input type="time" id="exposant-planning-heure-debut" required></div><div class="form-group"><label for="exposant-planning-heure-fin">Heure Fin</label><input type="time" id="exposant-planning-heure-fin"></div><div class="form-group"><label for="exposant-planning-stand">N° Stand (spécifique)</label><input type="text" id="exposant-planning-stand" placeholder="Optionnel"></div><button type="submit" class="btn btn-primary">Ajouter Planning</button></form></div></div>
+
+    <!-- Infos Utiles (Anciennement Calendrier) -->
+    <div id="modal-info-utile" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="modal-info-utile">×</span>
+        <h2>Nouvelle Information Utile</h2>
+        <form id="form-info-utile">
+          <div class="form-group"><label for="info-title">Titre</label><input type="text" id="info-title" required></div>
+          <div class="form-group"><label for="info-description">Description/Contenu</label><textarea id="info-description" rows="4" required></textarea></div>
+          <div class="form-group"><label for="info-categorie">Catégorie</label><input type="text" id="info-categorie" placeholder="Ex: Procédures, Contacts..."></div>
+          <div class="form-group"><label for="info-link">Lien externe</label><input type="url" id="info-link" placeholder="https://..."></div>
+          <div class="form-group"><label for="info-date">Date Associée</label><input type="date" id="info-date"></div>
+          <div class="form-group"><label for="info-time">Heure Associée</label><input type="time" id="info-time"></div>
+          <button type="submit" id="submit-add-info-utile" class="btn btn-primary">Ajouter Info</button>
+        </form>
+      </div>
+    </div>
+    <div id="modal-edit-info-utile" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="modal-edit-info-utile">×</span>
+        <h2>Modifier Information Utile</h2>
+        <form id="form-edit-info-utile">
+          <input type="hidden" id="edit-info-id">
+          <div class="form-group"><label for="edit-info-title">Titre</label><input type="text" id="edit-info-title" required></div>
+          <div class="form-group"><label for="edit-info-description">Description</label><textarea id="edit-info-description" rows="4" required></textarea></div>
+          <div class="form-group"><label for="edit-info-categorie">Catégorie</label><input type="text" id="edit-info-categorie"></div>
+          <div class="form-group"><label for="edit-info-link">Lien externe</label><input type="url" id="edit-info-link"></div>
+          <div class="form-group"><label for="edit-info-date">Date Associée</label><input type="date" id="edit-info-date"></div>
+          <div class="form-group"><label for="edit-info-time">Heure Associée</label><input type="time" id="edit-info-time"></div>
+          <button type="submit" id="submit-edit-info-utile" class="btn btn-primary">Mettre à Jour</button>
+        </form>
+      </div>
+    </div>
+ <footer id="app-footer">
+            <p>© 2025 CSE CRM59 - Atelier du CSE</p>
+        </footer>
+</div> <!-- Fin de #app-container -->
+
   <!-- Inclusion du script principal -->
-  <script src="script.js" defer></script>
+ <script type="module" src="js/main.js" defer></script>
 
     <button id="scrollToTopBtn" title="Remonter en haut">
       <i class="fas fa-arrow-up"></i>
