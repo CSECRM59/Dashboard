@@ -174,26 +174,44 @@ async function deleteCoffeeReport(id) {
 }
 
 // --- EXPORTS PDF ET CSV ---
+// js/modules/signalementsCafe.js
+// ... (début du fichier)
+
+// --- EXPORTS PDF ET CSV ---
 function exportCoffeeEnCoursToPDF() {
     if (!window.coffeeTable) { showNotification("Tableau principal non prêt.", true); return; }
     if (typeof jspdf === 'undefined' || !jspdf.jsPDF?.API?.autoTable) { showNotification("Librairies PDF manquantes.", true); return; }
     const enCoursData = (window.coffeeData || []).filter(r => ((r.status||'en cours').toLowerCase().trim()==='en cours'||(r.status||'en cours').toLowerCase().trim()===''));
     if (enCoursData.length === 0) { showNotification("Aucun signalement 'en cours' à exporter.", false); return; }
+
     const tempDiv = document.createElement('div');
-    const exportCols = [ /* Colonnes spécifiques pour cet export, sans formateurs complexes si possible */
-        {title:"Date Signal.",field:"importTimestamp",formatter:(c)=>{const t=c.getValue(); return t?.toDate?t.toDate().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):(t?new Date(t).toLocaleString('fr-FR'):"?");}},
-        {title:"Téléphone",field:"telephone"}, {title:"Machine",field:"machine"}, {title:"Problème",field:"probleme"},
-        {title:"Par",field:"nom"}, {title:"Email",field:"email"}, {title:"Opération",field:"operation"},
-        {title:"Date Évén.",field:"dateEvenementRaw"}, {title:"Heure Évén.",field:"heureEvenementRaw"},
-        {title:"Paiement",field:"paiement"}, {title:"Commentaire",field:"commentaire"} // autoTable gère le multiligne
+
+    // === MODIFICATION ICI ===
+    // Nouvelle définition des colonnes pour l'export PDF
+    const exportCols = [
+        { title: "Date Évén.", field: "dateEvenementRaw" }, // Format YYYY-MM-DD
+        { title: "Heure Évén.", field: "heureEvenementRaw" }, // Format HH:mm
+        { title: "Machine", field: "machine" },
+        {
+            title: "Nom Prénom",
+            field: "nom", // Utilise le champ 'nom'. Si vous avez un champ 'prenom' séparé, il faudrait un formatter.
+                          // Pour l'instant, on suppose que 'nom' contient l'info principale.
+        },
+        { title: "Email", field: "email" },
+        { title: "Téléphone", field: "telephone" },
+        { title: "Paiement", field: "paiement" },
+        { title: "Problème", field: "probleme", formatter: "textarea" }, // Pour gérer le texte sur plusieurs lignes si besoin
+        { title: "Commentaire", field: "commentaire", formatter: "textarea" } // Idem
     ];
+    // === FIN DE LA MODIFICATION ===
+
     try {
         const tempTable = new Tabulator(tempDiv, { data: enCoursData, columns: exportCols, layout:"fitData" });
         setTimeout(() => { // Délai pour que Tabulator prépare les données
             try {
                 tempTable.download("pdf", "signalements_cafe_en_cours.pdf", {
                     orientation: "landscape",
-                    title: "Signalements Café (En Cours)", // Sera ignoré par autoTable, utiliser didDrawPage
+                    // title: "Signalements Café (En Cours)", // Le titre est géré par didDrawPage
                     autoTable: {
                         styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak' },
                         headStyles: { fillColor: [41,128,185], textColor: 255, fontSize: 8, fontStyle: 'bold' },
@@ -209,6 +227,8 @@ function exportCoffeeEnCoursToPDF() {
         }, 200);
     } catch (tblErr) { console.error("Erreur création table temp PDF:", tblErr); showNotification("Erreur prép. export PDF.", true); }
 }
+
+// ... (reste du fichier signalementsCafe.js)
 
 // --- SETUP DES LISTENERS DU MODULE ---
 export function setupCoffeeListeners() {
